@@ -2204,32 +2204,23 @@ def inject_styles() -> None:
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
-                margin-bottom: 0.7rem;
-                margin-top: 0.25rem;
+                margin-bottom: 0.75rem;
+                margin-top: 0.35rem;
             }
 
             .step6-hero-kicker-sub {
                 margin-top: 0;
             }
 
-            .step6-hero-left {
-                background: #ffffff;
-                border: 1px solid rgba(15, 39, 66, 0.1);
-                border-radius: 16px;
-                padding: 1.2rem 1.3rem;
-                box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
-                height: 100%;
-            }
-
-            .step6-hero-left .step6-hero-kicker {
-                margin-top: 0;
+            .step6-hero-col {
+                padding: 0.25rem 0.1rem 0;
             }
 
             .step6-metric-row {
                 display: flex;
                 align-items: center;
                 gap: 0.9rem;
-                padding: 0.45rem 0;
+                padding: 0.55rem 0;
             }
 
             .step6-metric-row + .step6-metric-row {
@@ -2238,31 +2229,31 @@ def inject_styles() -> None:
 
             .step6-metric-row-value {
                 color: #10263f;
-                font-size: 1.7rem;
+                font-size: 1.75rem;
                 font-weight: 800;
                 line-height: 1;
                 letter-spacing: -0.01em;
                 font-variant-numeric: tabular-nums;
-                min-width: 3.5rem;
+                min-width: 3.6rem;
             }
 
             .step6-metric-row-text {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.25rem;
+                gap: 0.28rem;
             }
 
             .step6-metric-row-label {
                 color: #27425c;
-                font-size: 0.86rem;
+                font-size: 0.88rem;
                 font-weight: 600;
                 line-height: 1.2;
             }
 
             .step6-metric-row-tag {
                 display: inline-flex;
-                padding: 0.12rem 0.5rem;
+                padding: 0.14rem 0.55rem;
                 border-radius: 999px;
                 border: 1px solid transparent;
                 font-size: 0.7rem;
@@ -2272,7 +2263,7 @@ def inject_styles() -> None:
             .step6-hero-divider {
                 height: 1px;
                 background: rgba(15, 39, 66, 0.08);
-                margin: 1rem 0 0.85rem 0;
+                margin: 1rem 0 0.9rem 0;
             }
 
             .step6-hero-snapshot {
@@ -2281,14 +2272,14 @@ def inject_styles() -> None:
                 padding: 0;
                 display: flex;
                 flex-direction: column;
-                gap: 0.42rem;
+                gap: 0.45rem;
             }
 
             .step6-hero-snapshot li {
                 color: #27425c;
-                font-size: 0.82rem;
+                font-size: 0.84rem;
                 line-height: 1.5;
-                padding-left: 0.9rem;
+                padding-left: 0.92rem;
                 position: relative;
             }
 
@@ -2297,22 +2288,17 @@ def inject_styles() -> None:
                 position: absolute;
                 left: 0;
                 top: 0.55rem;
-                width: 0.3rem;
-                height: 0.3rem;
+                width: 0.32rem;
+                height: 0.32rem;
                 border-radius: 999px;
                 background: rgba(58, 111, 180, 0.55);
             }
 
-            .step6-briefing-card-v2 {
-                margin-top: 1rem;
-                background: #ffffff;
-                border: 1px solid rgba(15, 39, 66, 0.1);
-                border-radius: 16px;
-                padding: 1.2rem 1.3rem;
-                box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
+            .step6-briefing-block {
+                margin-top: 0.25rem;
             }
 
-            .step6-briefing-card-v2 .step6-briefing-title {
+            .step6-briefing-block .step6-briefing-title {
                 color: #10263f;
                 font-size: 1.05rem;
                 font-weight: 800;
@@ -2320,19 +2306,19 @@ def inject_styles() -> None:
                 margin-bottom: 0.5rem;
             }
 
-            .step6-briefing-card-v2 .step6-briefing-body {
+            .step6-briefing-block .step6-briefing-body {
                 color: #334a63;
                 font-size: 0.9rem;
                 line-height: 1.6;
             }
 
-            .step6-briefing-card-v2 .step6-briefing-divider {
+            .step6-briefing-inner-divider {
                 height: 1px;
                 background: rgba(15, 39, 66, 0.08);
                 margin: 1rem 0 0.9rem 0;
             }
 
-            .step6-briefing-card-v2 .step6-briefing-subtitle {
+            .step6-briefing-block .step6-briefing-subtitle {
                 color: #6f8297;
                 font-size: 0.7rem;
                 font-weight: 800;
@@ -2341,7 +2327,7 @@ def inject_styles() -> None:
                 margin-bottom: 0.55rem;
             }
 
-            .step6-briefing-card-v2 .step6-action-list {
+            .step6-briefing-block .step6-action-list {
                 list-style: none;
                 margin: 0;
                 padding: 0;
@@ -2350,7 +2336,7 @@ def inject_styles() -> None:
                 gap: 0.55rem;
             }
 
-            .step6-briefing-card-v2 .step6-action-list li {
+            .step6-briefing-block .step6-action-list li {
                 display: flex;
                 align-items: flex-start;
                 gap: 0.7rem;
@@ -2359,7 +2345,7 @@ def inject_styles() -> None:
                 line-height: 1.55;
             }
 
-            .step6-briefing-card-v2 .step6-action-num {
+            .step6-briefing-block .step6-action-num {
                 flex: 0 0 auto;
                 width: 1.3rem;
                 height: 1.3rem;
@@ -8733,7 +8719,7 @@ def _render_local_analysis_summary(
     snapshot_items = "".join(f'<li>{s}</li>' for s in snapshot_bits)
 
     left_html = (
-        '<div class="step6-hero-left">'
+        '<div class="step6-hero-col">'
         '<div class="step6-hero-kicker">Package quality</div>'
         + metric_row("Overall quality", f"{overall_score:.1f}", quality_note, quality_kind)
         + metric_row("Privacy", f"{privacy_score:.1f}", privacy_note, privacy_kind)
@@ -8793,7 +8779,12 @@ def _render_local_analysis_summary(
     with hero_cols[0]:
         st.markdown(left_html, unsafe_allow_html=True)
     with hero_cols[1]:
-        st.markdown('<div class="step6-hero-kicker">Role lens</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="step6-hero-col">'
+            '<div class="step6-hero-kicker">Role lens</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
         lens_cols = st.columns(len(local_role_lenses), gap="small")
         for idx, lens in enumerate(local_role_lenses):
             if lens_cols[idx].button(
@@ -8812,10 +8803,11 @@ def _render_local_analysis_summary(
             for i, a in enumerate(role_actions)
         )
         st.markdown(
-            '<div class="step6-briefing-card-v2">'
+            '<div class="step6-briefing-block">'
+            '<div class="step6-hero-divider"></div>'
             f'<div class="step6-briefing-title">{html.escape(role_title)}</div>'
             f'<div class="step6-briefing-body">{html.escape(role_summary)}</div>'
-            f'<div class="step6-briefing-divider"></div>'
+            '<div class="step6-briefing-inner-divider"></div>'
             '<div class="step6-briefing-subtitle">Next actions</div>'
             f'<ol class="step6-action-list">{action_items_html}</ol>'
             '</div>',
