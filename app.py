@@ -2086,6 +2086,160 @@ def inject_styles() -> None:
                 flex: 0 0 auto;
             }
 
+            /* ── New Local Agent layout (v2) ───────────────────────── */
+            .step6-metric-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.72rem;
+                margin-top: 0.95rem;
+            }
+
+            .step6-metric-tile {
+                background: #ffffff;
+                border: 1px solid rgba(15, 39, 66, 0.1);
+                border-radius: 14px;
+                padding: 1rem 1.1rem;
+                box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+            }
+
+            .step6-metric-label {
+                color: #6f8297;
+                font-size: 0.7rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 0.1rem;
+            }
+
+            .step6-metric-value {
+                color: #10263f;
+                font-size: 1.95rem;
+                font-weight: 800;
+                line-height: 1.1;
+                letter-spacing: -0.01em;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .step6-metric-tag {
+                align-self: flex-start;
+                display: inline-flex;
+                margin-top: 0.42rem;
+                padding: 0.15rem 0.55rem;
+                border-radius: 999px;
+                border: 1px solid transparent;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+            }
+
+            .step6-summary-row {
+                margin-top: 0.78rem;
+                padding: 0.6rem 0.85rem;
+                background: #f5f8fb;
+                border: 1px solid rgba(15, 39, 66, 0.07);
+                border-radius: 10px;
+                color: #27425c;
+                font-size: 0.82rem;
+                line-height: 1.5;
+            }
+
+            .step6-section-divider {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin: 1.35rem 0 0.55rem 0;
+            }
+
+            .step6-section-divider::before,
+            .step6-section-divider::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: rgba(15, 39, 66, 0.09);
+            }
+
+            .step6-section-label {
+                color: #6f8297;
+                font-size: 0.7rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+
+            .step6-briefing-card {
+                margin-top: 1rem;
+                background: #ffffff;
+                border: 1px solid rgba(15, 39, 66, 0.1);
+                border-radius: 16px;
+                padding: 1.2rem 1.3rem;
+                box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
+            }
+
+            .step6-briefing-title {
+                color: #10263f;
+                font-size: 1.08rem;
+                font-weight: 800;
+                line-height: 1.3;
+                margin-bottom: 0.55rem;
+            }
+
+            .step6-briefing-body {
+                color: #334a63;
+                font-size: 0.92rem;
+                line-height: 1.6;
+            }
+
+            .step6-briefing-divider {
+                height: 1px;
+                background: rgba(15, 39, 66, 0.08);
+                margin: 1rem 0 0.9rem 0;
+            }
+
+            .step6-briefing-subtitle {
+                color: #6f8297;
+                font-size: 0.72rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-bottom: 0.55rem;
+            }
+
+            .step6-action-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.55rem;
+            }
+
+            .step6-action-list li {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.7rem;
+                color: #27425c;
+                font-size: 0.88rem;
+                line-height: 1.55;
+            }
+
+            .step6-action-num {
+                flex: 0 0 auto;
+                width: 1.35rem;
+                height: 1.35rem;
+                border-radius: 999px;
+                background: rgba(11, 94, 168, 0.1);
+                color: #0b5ea8;
+                font-size: 0.75rem;
+                font-weight: 800;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 0.08rem;
+            }
+
             .step6-mode-foot {
                 margin-top: auto;
                 padding-top: 0.68rem;
@@ -2210,6 +2364,10 @@ def inject_styles() -> None:
                 }
 
                 .step6-local-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .step6-metric-grid {
                     grid-template-columns: 1fr;
                 }
             }
@@ -8386,62 +8544,85 @@ def _render_local_analysis_summary(
     sensitive_count = sum(1 for item in metadata if bool(item.get("include")) and metadata_sensitivity(item) == "Sensitive")
 
     if overall_score >= 85:
-        quality_note = "Data quality is strong enough for initial internal review."
+        quality_note = "Strong"
     elif overall_score >= 70:
-        quality_note = "Data quality is acceptable for initial internal review."
+        quality_note = "Acceptable"
     else:
-        quality_note = "Data quality still needs another pass before wider internal use."
+        quality_note = "Below threshold"
+
+    if privacy_score >= 85:
+        privacy_note = "Strong"
+    elif privacy_score >= 70:
+        privacy_note = "Moderate"
+    else:
+        privacy_note = "Weak"
 
     if correlation_score >= 90:
-        stability_note = "Key distributions and relationships appear stable."
+        stability_note = "Stable"
     elif correlation_score >= 75:
-        stability_note = "Core patterns look usable, with some drift worth checking."
+        stability_note = "Usable"
     else:
-        stability_note = "Pattern stability is mixed; validate core fields before reuse."
+        stability_note = "Mixed"
 
-    checks = [
-        f"Missing values flagged across {missing_fields} field(s)" if missing_fields else "Low missingness; confirm completeness",
-        f"{high_findings} high / {medium_findings} medium hygiene finding(s)" if (high_findings or medium_findings) else "No hygiene blockers on record",
-        f"Restricted fields: {restricted_count} · Sensitive: {sensitive_count}" if (restricted_count or sensitive_count) else "No restricted / sensitive fields flagged",
-    ]
-    actions = [
-        "Resolve flagged fields before release" if high_findings else "Confirm release scope is sandbox-only",
-        "Rerun validation after any change",
-        "Escalate to Connected Agent for deeper interpretation" if not availability.get("can_use_external") else "Escalate to Connected Agent when you need scenario framing",
-    ]
-
-    def build_local_card(kicker: str, title: str, items: list[str]) -> str:
-        items_html = "".join(f"<li>{html.escape(item)}</li>" for item in items)
+    # ── Metric tiles (replaces the 3 checklist-style cards) ────────
+    def build_metric_tile(label: str, value: str, tag: str, tag_kind: str) -> str:
+        # tag_kind: "good" / "warn" / "bad" controls the pill color
+        tag_colors = {
+            "good": ("#136B48", "#EDF9F3", "#B8E3CC"),
+            "warn": ("#9C6A17", "#FFF6E3", "#F0DDB5"),
+            "bad":  ("#9d2b3c", "#fff1f3", "#F2C9D1"),
+            "neutral": ("#456b91", "#F1F5F9", "#D8E1EA"),
+        }
+        fg, bg, bd = tag_colors.get(tag_kind, tag_colors["neutral"])
         return (
-            '<div class="step6-local-card">'
-            f'<div class="step6-local-kicker">{html.escape(kicker)}</div>'
-            f'<div class="step6-local-title">{html.escape(title)}</div>'
-            f'<ul class="step6-local-list">{items_html}</ul>'
+            '<div class="step6-metric-tile">'
+            f'<div class="step6-metric-label">{html.escape(label)}</div>'
+            f'<div class="step6-metric-value">{html.escape(value)}</div>'
+            f'<span class="step6-metric-tag" style="color:{fg};background:{bg};border-color:{bd};">{html.escape(tag)}</span>'
             '</div>'
         )
 
+    quality_kind = "good" if overall_score >= 75 else ("warn" if overall_score >= 60 else "bad")
+    privacy_kind = "good" if privacy_score >= 80 else ("warn" if privacy_score >= 65 else "bad")
+    correlation_kind = "good" if correlation_score >= 85 else ("warn" if correlation_score >= 70 else "bad")
+
     st.markdown(
-        '<div class="step6-local-grid">'
-        + build_local_card(
-            "Readiness",
-            "Local Agent summary",
-            [
-                quality_note,
-                stability_note,
-                f"{completeness:.1f}% completeness across the current source profile.",
-            ],
-        )
-        + build_local_card("Checks", "Verify next", checks)
-        + build_local_card("Next actions", "Proceed with", actions)
+        '<div class="step6-metric-grid">'
+        + build_metric_tile("Overall quality", f"{overall_score:.1f}", quality_note, quality_kind)
+        + build_metric_tile("Privacy", f"{privacy_score:.1f}", privacy_note, privacy_kind)
+        + build_metric_tile("Correlation", f"{correlation_score:.1f}", stability_note, correlation_kind)
         + '</div>',
         unsafe_allow_html=True,
     )
 
+    # Completeness + hygiene summary line — replaces the "Checks" card
+    summary_bits = []
+    summary_bits.append(f"{completeness:.1f}% completeness")
+    if missing_fields:
+        summary_bits.append(f"{missing_fields} field(s) with missing values")
+    if high_findings or medium_findings:
+        summary_bits.append(f"{high_findings} high / {medium_findings} medium hygiene flag(s)")
+    if restricted_count or sensitive_count:
+        summary_bits.append(f"{restricted_count} restricted · {sensitive_count} sensitive")
+    st.markdown(
+        '<div class="step6-summary-row">'
+        + '  ·  '.join(html.escape(s) for s in summary_bits)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Role selector ─────────────────────────────────────────────
     current_role = st.session_state.get("current_role", "Data Analyst")
     local_role_lenses = ["Data Analyst", "Manager / Reviewer", "Privacy Officer"]
     default_lens = current_role if current_role in local_role_lenses else "Data Analyst"
     selected_lens = st.session_state.get("step6_local_role_lens", default_lens)
 
+    st.markdown(
+        '<div class="step6-section-divider">'
+        '<span class="step6-section-label">Role lens</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
     lens_cols = st.columns(len(local_role_lenses), gap="small")
     for idx, lens in enumerate(local_role_lenses):
         if lens_cols[idx].button(
@@ -8455,13 +8636,14 @@ def _render_local_analysis_summary(
     selected_lens = st.session_state.get("step6_local_role_lens", default_lens)
     st.caption(ROLE_PRIORITY_NOTES.get(selected_lens, ""))
 
+    # ── Role briefing + actions ───────────────────────────────────
     if selected_lens == "Data Analyst":
         role_title = "Analyst briefing"
-        role_lines = [
-            f"Analytical utility is strongest when overall quality stays above 70; the current package is at {overall_score:.1f}.",
-            f"Watch {missing_fields} field(s) with missing values and {high_findings} high-severity hygiene finding(s) before dashboard work.",
-            "Use the local console for fast screening, then move to Connected Agent for deeper pattern discovery.",
-        ]
+        role_summary = (
+            f"Analytical utility is strongest above 70. Current package is at {overall_score:.1f}. "
+            f"Watch {missing_fields} field(s) with missing values and {high_findings} high-severity "
+            "hygiene finding(s) before dashboard work."
+        )
         role_actions = [
             "Recheck highest-drift fields before publishing any internal dashboard.",
             "Review field handling for restricted and sensitive columns.",
@@ -8469,11 +8651,12 @@ def _render_local_analysis_summary(
         ]
     elif selected_lens == "Manager / Reviewer":
         role_title = "Reviewer briefing"
-        role_lines = [
-            "Treat the local console as a decision support layer for internal use, not as final approval evidence.",
-            f"Current internal readiness is {'acceptable for sandbox review' if local_ready else 'still conditional'} based on hygiene and quality signals.",
-            f"Privacy score is {privacy_score:.1f}/100 and correlation stability is {correlation_score:.1f}/100.",
-        ]
+        role_summary = (
+            f"Internal readiness is "
+            f"{'acceptable for sandbox review' if local_ready else 'still conditional'}. "
+            f"Privacy {privacy_score:.1f}, correlation {correlation_score:.1f}. Use this console "
+            "for first-pass review, not as final approval evidence."
+        )
         role_actions = [
             "Check whether the current package is limited to internal sandbox use only.",
             "Confirm unresolved hygiene findings are understood before wider circulation.",
@@ -8481,111 +8664,28 @@ def _render_local_analysis_summary(
         ]
     else:
         role_title = "Privacy briefing"
-        role_lines = [
-            f"The current package includes {restricted_count} restricted field(s) and {sensitive_count} sensitive field(s) in the approved synthetic design.",
-            f"Privacy score is {privacy_score:.1f}/100; no raw source rows enter either the local or connected agent layer.",
-            "Focus on whether the current generalization choices match the intended downstream use.",
-        ]
+        role_summary = (
+            f"{restricted_count} restricted and {sensitive_count} sensitive field(s) included. "
+            f"Privacy score {privacy_score:.1f}. No raw source rows enter either agent layer. "
+            "Focus on whether generalization choices match the intended downstream use."
+        )
         role_actions = [
             "Inspect sensitive dates, geography, and free-text-like fields first.",
             "Confirm restricted identifiers are never required downstream.",
             "Escalate review if the package use extends beyond controlled internal testing.",
         ]
 
-    st.markdown(
-        '<div class="step6-local-grid" style="margin-top:0.9rem;grid-template-columns:repeat(2,minmax(0,1fr));">'
-        + build_local_card("Role lens", role_title, role_lines)
-        + build_local_card("Role actions", "What this role should do next", role_actions)
-        + '</div>',
-        unsafe_allow_html=True,
+    action_items_html = "".join(
+        f'<li><span class="step6-action-num">{i+1}</span><span>{html.escape(a)}</span></li>'
+        for i, a in enumerate(role_actions)
     )
-
-    local_focus = st.session_state.get("step6_local_focus", "quality")
-    focus_cols = st.columns(3, gap="small")
-    if focus_cols[0].button("Package fit", use_container_width=True, key="step6_local_focus_quality"):
-        st.session_state.step6_local_focus = "quality"
-        st.rerun()
-    if focus_cols[1].button("Risk review", use_container_width=True, key="step6_local_focus_risks"):
-        st.session_state.step6_local_focus = "risks"
-        st.rerun()
-    if focus_cols[2].button("Decision brief", use_container_width=True, key="step6_local_focus_readiness"):
-        st.session_state.step6_local_focus = "readiness"
-        st.rerun()
-    local_focus = st.session_state.get("step6_local_focus", local_focus)
-
-    if local_focus == "quality":
-        if selected_lens == "Data Analyst":
-            memo_title = "Analyst package fit"
-            memo_lines = [
-                f"Overall package quality is {overall_score:.1f}/100 with completeness at {completeness:.1f}%.",
-                f"Use the current package for rapid prototyping only after checking {missing_fields} field(s) with missing values.",
-                "If you need hypothesis generation or pattern mining, hand off to Connected Agent after this local screen.",
-            ]
-        elif selected_lens == "Manager / Reviewer":
-            memo_title = "Reviewer package fit"
-            memo_lines = [
-                f"The package presents {overall_score:.1f}/100 overall quality and {privacy_score:.1f}/100 privacy protection for internal review.",
-                "This is strong enough for a controlled review conversation, but not by itself a release approval package.",
-                "Use the local view to decide whether the submission merits a deeper connected analysis.",
-            ]
-        else:
-            memo_title = "Privacy package fit"
-            memo_lines = [
-                f"Privacy protection is {privacy_score:.1f}/100 with {restricted_count} restricted and {sensitive_count} sensitive field(s) included.",
-                "Local review is the safest first pass for verifying whether synthetic controls match the intended internal use.",
-                "Escalate only when downstream use requires a richer justification narrative.",
-            ]
-    elif local_focus == "risks":
-        if selected_lens == "Data Analyst":
-            memo_title = "Analyst risk review"
-            memo_lines = [
-                f"{high_findings} high-severity and {medium_findings} medium-severity hygiene findings remain in the working package.",
-                f"Correlation stability is {correlation_score:.1f}/100, so drift checks should focus on sparse and high-impact fields first.",
-                "Validate outliers, null-heavy columns, and synthetic date behavior before building downstream assets.",
-            ]
-        elif selected_lens == "Manager / Reviewer":
-            memo_title = "Reviewer risk review"
-            memo_lines = [
-                f"Current blockers are {high_findings} high-severity and {medium_findings} medium-severity hygiene finding(s).",
-                "The main review question is whether those issues materially change internal-use readiness or simply require documentation.",
-                "If the decision still feels ambiguous, use Connected Agent to generate a tighter risk narrative.",
-            ]
-        else:
-            memo_title = "Privacy risk review"
-            memo_lines = [
-                f"Restricted and sensitive handling should be reviewed before any broader internal sharing decision.",
-                f"Privacy remains at {privacy_score:.1f}/100 while correlation stability sits at {correlation_score:.1f}/100; that balance deserves a quick check on quasi-identifiers.",
-                "Inspect synthetic dates, geography, and any potentially linkable structure before sign-off.",
-            ]
-    else:
-        if selected_lens == "Data Analyst":
-            memo_title = "Analyst decision brief"
-            memo_lines = [
-                "Proceed to internal sandbox testing." if local_ready else "Hold before wider internal testing.",
-                "Use the local agent as a go / no-go screen for dashboard prototyping, QA, and metadata cleanup.",
-                "Move to Connected Agent when you need richer explanation, scenario comparison, or hypothesis generation.",
-            ]
-        elif selected_lens == "Manager / Reviewer":
-            memo_title = "Reviewer decision brief"
-            memo_lines = [
-                "Current posture: acceptable for controlled internal review." if local_ready else "Current posture: keep the package in a conditional review state.",
-                "Local analysis is enough to support a first-pass reviewer conversation and to identify what evidence is still missing.",
-                "Use Connected Agent when you need a sharper narrative for approval, escalation, or executive discussion.",
-            ]
-        else:
-            memo_title = "Privacy decision brief"
-            memo_lines = [
-                "Current posture: keep this package within controlled internal use." if local_ready else "Current posture: resolve privacy-sensitive blockers before broader use.",
-                "Local analysis is the safest mode for privacy-first screening because it stays entirely in the workspace.",
-                "Only move to Connected Agent when a stronger analytical summary is needed on the approved synthetic package.",
-            ]
-
-    memo_html = ''.join(f"<li>{html.escape(line)}</li>" for line in memo_lines)
     st.markdown(
-        '<div class="step6-analysis-card is-answer" style="margin-top:0.9rem;">'
-        '<div class="step6-analysis-card-label">Local analysis memo</div>'
-        f'<div class="step6-local-title" style="margin-bottom:0.55rem;">{html.escape(memo_title)}</div>'
-        f'<ul class="step6-local-list">{memo_html}</ul>'
+        '<div class="step6-briefing-card">'
+        f'<div class="step6-briefing-title">{html.escape(role_title)}</div>'
+        f'<div class="step6-briefing-body">{html.escape(role_summary)}</div>'
+        f'<div class="step6-briefing-divider"></div>'
+        '<div class="step6-briefing-subtitle">Next actions</div>'
+        f'<ol class="step6-action-list">{action_items_html}</ol>'
         '</div>',
         unsafe_allow_html=True,
     )
