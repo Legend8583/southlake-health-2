@@ -50,17 +50,27 @@ LOCAL_SYSTEM_PROMPT = (
     "is for (readiness / blockers / release decisions), and invite one concrete question. No bullets, "
     "no verdict label, no 'Next action' line in this case. "
     "\n\nFor real analytical or workflow questions, use the STRICT style below."
-    "\n\nSTYLE — strict:"
+    "\n\nSTYLE — write like an ops-control memo, not an AI essay:"
     "\n  1) Open with a VERDICT LABEL in bold: **Ready**, **Hold**, **Blocker**, **Warning**, or **Not applicable**. "
-    "Follow the label with a single-sentence verdict (≤ 22 words). "
-    "\n  2) Then 2–4 short bullets. Each bullet ≤ 20 words. Tie bullets to concrete numbers or states "
-    "from the context (scores, epsilon, counts, approval status). "
-    "\n  3) End with a single line: `Next action: <one concrete step>`. "
-    "\n  4) Total length: 60–120 words. If the question is purely informational and no verdict applies, "
-    "skip the label but keep the bullet form and next-action line. "
-    "\n\nVOCABULARY: Prefer operational workflow verbs — confirm, block, resolve, proceed, hold, escalate, "
-    "clear, gate. Avoid speculative language (could, might, potentially, perhaps). Avoid narrative framing "
-    "(pattern, scenario, hypothesis — those belong to Connected Agent). "
+    "Follow the label with a single-sentence verdict (≤ 18 words). Lead with the actual state, not "
+    "a qualifier."
+    "\n  2) Then 2–4 short bullets. Each bullet ≤ 16 words. Lead each bullet with a specific number, "
+    "field name, or state — not with 'The package has...' or 'This suggests...'. Bad: 'The hygiene "
+    "score is somewhat low.' Good: 'Hygiene score 46. Three high-severity findings on flow-time fields.'"
+    "\n  3) End with a single line: `Next action: <one concrete step>`. Imperative verb. No 'you should'."
+    "\n  4) Total length: 50–100 words. Shorter is stronger."
+    "\n\nLANGUAGE RULES (strict — avoid AI-essay tells):"
+    "\n  • Short declarative sentences. Periods > em-dashes. At most ONE em-dash total in the response."
+    "\n  • Ban these phrases entirely: 'worth considering', 'worth noting', 'it is worth', 'the framing "
+    "should be', 'may be amplifying', 'could read as', 'reads as', 'reasonable starting point', 'in "
+    "a way that suggests', 'tends to indicate'."
+    "\n  • Ban hedge stacks. Use ONE of [may, might, could, suggests, likely, possibly] per full response, "
+    "not per sentence."
+    "\n  • Verbs: prefer 'has', 'is', 'shows N', 'covers Y', 'drops to X', 'clears', 'blocks', "
+    "'confirms', 'holds'. Avoid 'suggests', 'indicates', 'tends to'."
+    "\n  • Cite fields by actual column name with a count or score: 'wait_time_min (4 outliers)' not "
+    "'the flow-time columns'."
+    "\n  • No narrative framing (pattern, scenario, hypothesis — those belong to Connected Agent)."
     "\n\nAVOID: long essays, exploratory analysis, multi-paragraph interpretation, scenario comparisons, "
     "stakeholder storytelling. Those are Connected Agent's job."
 )
@@ -81,22 +91,34 @@ CONNECTED_SYSTEM_PROMPT = (
     "**Scenario —** / **Watch point —** sections in this case. No framing sentence about the package. "
     "Conversational but still professional. "
     "\n\nFor real analytical questions, use the STRICT style below."
-    "\n\nSTYLE — strict:"
-    "\n  1) Open with one short interpretive framing sentence that reads the package at a high level "
-    "(1–2 sentences, ≤ 45 words). No verdict label. "
-    "\n  2) Then 2–4 short structured sections. Each section is introduced by ONE of these bold labels "
-    "followed by an em-dash: **Pattern —**, **Scenario —**, **Stakeholder view —**, **Watch point —**, "
-    "**Compared to —**. Each section is 1–3 sentences. "
-    "\n  3) If the user asked about a decision (ready / share / approve), close with a short neutral "
-    "paragraph framing trade-offs — do NOT issue a verdict label. Defer the call to Local Agent / the analyst. "
-    "\n  4) Total length: 180–320 words. "
-    "\n\nVOCABULARY: Prefer interpretive verbs — suggests, indicates, consider, reads as, compared to, "
-    "would behave, is well-suited for. Cite specific numbers from the context (correlation score, epsilon, "
-    "constraint count) inside the narrative — these anchor the interpretation. "
+    "\n\nSTYLE — write like a senior analyst briefing a peer, NOT like an AI essay:"
+    "\n  1) Open with ONE tight framing sentence (≤ 25 words). State the actual read. No hedge words. "
+    "No 'the package shows...' — just say the thing."
+    "\n  2) Then 2–3 (max 4) short labelled sections. Each label is ONE of: "
+    "**Pattern —**, **Scenario —**, **Stakeholder view —**, **Watch point —**, **Compared to —**. "
+    "Each section is 2–4 short sentences. Short sentences. Cut filler. No em-dash chains."
+    "\n  3) If the user asked about a decision (ready / share / approve), close with ONE short "
+    "sentence framing the trade-off. Defer the verdict to Local Agent or the reviewer. "
+    "\n  4) Total length: 130–240 words. Shorter is better."
+    "\n\nLANGUAGE RULES (strict — avoid AI-essay tells):"
+    "\n  • Front-load specifics. Lead sentences with concrete numbers or field names, not with "
+    "'The package shows...' or 'This suggests...'. Bad: 'Length of stay shows a parallel instability, "
+    "with three values outside the IQR-based expected range.' Good: 'length_of_stay_hr has 3 IQR "
+    "outliers, matching the wait_time_min pattern.'"
+    "\n  • Use short declarative sentences. Period > em-dash. No more than one em-dash per section."
+    "\n  • Budget hedges: at most ONE per section. Ban these phrases entirely: 'worth considering', "
+    "'worth noting', 'it is worth', 'the framing should be', 'may be amplifying', 'could read as', "
+    "'likely more stable', 'reads as', 'reasonable starting point', 'in a way that suggests'."
+    "\n  • Verbs: prefer 'has', 'is', 'shows N', 'drops to X', 'covers Y', 'excludes Z'. Avoid "
+    "'suggests', 'indicates', 'may imply', 'would behave', 'tends to'."
+    "\n  • Cite fields by their actual column name and include a count or a score. 'wait_time_min "
+    "(4 outliers)' is better than 'flow-time columns'."
+    "\n  • Do not explain what the analysis means meta-level ('the framing should be that...'). Just "
+    "state the finding."
     "\n\nREMINDERS: Never imply access to raw source records or original identifiers. Talk about the "
-    "*synthetic* package's behavior, the *validation* evidence, the *metadata* intent. When discussing "
-    "tail behavior or rare events, remind the reader that DP noise adds uncertainty at the extremes. "
-    "Stay professional and measured — not marketing-toned. Avoid overclaiming certainty."
+    "*synthetic* package's behavior, the *validation* evidence, the *metadata* intent. When tails or "
+    "rare events come up, note the DP noise briefly — in ONE sentence, not a paragraph. "
+    "Stay professional. No marketing tone. No overclaim."
 )
 
 
@@ -435,107 +457,91 @@ def _fallback(msg: str, profile=None, hygiene=None, controls=None, validation=No
         )
 
     # ── CONNECTED AGENT fallback ────────────────────────────────────────
+    high_flags = (hygiene or {}).get("severity_counts", {}).get("High", 0)
+    med_flags = (hygiene or {}).get("severity_counts", {}).get("Medium", 0)
+
     if any(k in m for k in ["ready", "share", "release", "approve", "use", "suitable"]):
         return _connected_reply(
-            f"The approved synthetic package reads as well-suited for internal sandbox use, "
-            f"with overall quality {overall_score} and correlation preservation at {correlation}.",
+            f"Overall {overall_score}, privacy {privacy_score}, correlation {correlation}. "
+            f"Package is structurally sound; hygiene residue on source side is the live tension.",
             [
                 ("Pattern",
-                 f"The package's overall score of {overall_score} combined with a privacy score of "
-                 f"{privacy_score} suggests the generation profile landed in a usable middle zone — "
-                 "close enough to source patterns to support realistic analytics, yet distanced from "
-                 "individual records."),
+                 f"Correlation {correlation} and privacy {privacy_score} clear the structural bar. "
+                 f"Fidelity {(validation or {}).get('fidelity_score', 'n/a')} is the softer number — "
+                 "marginal distributions drift more than joint relationships."),
                 ("Scenario",
-                 "For operational analytics (throughput, triage mix, workflow timing), the package "
-                 "should behave close to the source operational reality. For predictive modelling on "
-                 "rare tail events, the Laplace DP noise adds meaningful uncertainty at the extremes — "
-                 "treat those regions cautiously."),
+                 "Safe for operational analytics: throughput, triage mix, workflow timing. "
+                 "Tail-sensitive modelling (extreme waits, rare CTAS) inherits DP noise at the edges."),
                 ("Stakeholder view",
-                 "Operations leads can use the package for throughput and mix questions. Clinical "
-                 "analysts should interpret only at the aggregate level, since the synthetic records "
-                 "are not patient-linked. Compliance can rely on the audit trail and the synthetic-only "
-                 "boundary being enforced."),
+                 "Ops leads: use for throughput and mix questions. "
+                 "Clinical analysts: aggregate-level only; records are not patient-linked. "
+                 "Compliance: audit trail and synthetic-only boundary hold."),
                 ("Watch point",
-                 f"{(hygiene or {}).get('severity_counts', {}).get('High', 0)} high / "
-                 f"{(hygiene or {}).get('severity_counts', {}).get('Medium', 0)} medium hygiene "
-                 "finding(s) remain on the source-side record. Worth confirming that no hygiene issue "
-                 "on a field you will analyse is unresolved."),
+                 f"{high_flags} high / {med_flags} medium hygiene flag(s) remain on record. "
+                 "Confirm no flagged field is in the analysis path."),
             ],
-            "Connected Agent frames the reading; the release decision itself sits with the reviewer "
-            "and the Local Agent checklist.",
+            "Connected Agent frames the read. The release call sits with Local Agent and the reviewer.",
         )
     if any(k in m for k in ["privacy", "fidelity", "epsilon", "dp", "noise"]):
         label = "higher-privacy" if fp < 40 else "balanced" if fp < 70 else "higher-fidelity"
         return _connected_reply(
-            f"The package is currently configured toward a {label} posture ({fp}/100 on the fidelity "
-            f"priority), which shapes what the synthetic output can and cannot support downstream.",
+            f"Posture is {label} ({fp}/100). Privacy score {privacy_score}, overall {overall_score}.",
             [
                 ("Pattern",
-                 f"At this setting, the privacy score is {privacy_score} and the overall "
-                 f"quality is {overall_score}. That suggests the trade-off is landing as intended — "
-                 "privacy cushion in place, with enough distributional signal for structural analytics."),
+                 f"At epsilon mapped from this posture, the trade-off is in balance: "
+                 f"privacy {privacy_score} with correlation {correlation} held. "
+                 "Structural signals survive; per-field distributions soften."),
                 ("Scenario",
-                 "If the downstream work is exploratory structure (which fields correlate, what the "
-                 "mix looks like), fidelity at this level is usually adequate. If the work is tail-"
-                 "sensitive modelling (extreme wait times, rare triage levels), the added noise will "
-                 "flatten the tails and should be acknowledged in any conclusions."),
+                 "Structural work (which fields correlate, what the mix looks like) holds up. "
+                 "Tail-sensitive modelling (extreme wait times, rare triage levels) flattens under DP noise. "
+                 "Acknowledge that in any tail conclusion."),
                 ("Compared to",
-                 "A stronger-privacy setting would widen that margin but further compress the tails. "
-                 "A higher-fidelity setting would sharpen structural signals but narrow the privacy "
-                 "buffer — the current configuration is a middle position."),
+                 "Stronger privacy widens the margin and compresses tails further. "
+                 "Higher fidelity sharpens per-field signal and narrows the privacy buffer. "
+                 "Current setting is the middle."),
             ],
         )
     if any(k in m for k in ["hygiene", "issue", "quality", "drift"]):
-        high = (hygiene or {}).get("severity_counts", {}).get("High", 0)
-        med = (hygiene or {}).get("severity_counts", {}).get("Medium", 0)
         return _connected_reply(
-            f"Hygiene findings on record ({high} high, {med} medium) shape how confidently this "
-            f"synthetic package can be read downstream.",
+            f"{high_flags} high / {med_flags} medium hygiene flag(s) on record. "
+            f"These shape how confidently the synthetic output can be read downstream.",
             [
                 ("Pattern",
-                 "Hygiene findings describe properties of the source data that propagate into the "
-                 "synthetic output via the metadata pipeline. A field with high-severity findings on "
-                 "the source side typically produces noisier synthetic output in that field."),
+                 "Source-side hygiene findings propagate into synthetic output via the metadata pipeline. "
+                 "A field flagged high on the source side produces noisier synthetic output in that field."),
                 ("Scenario",
-                 "If downstream analysis touches a flagged field, expect more drift than the headline "
-                 "quality score suggests. If the analysis avoids flagged fields, the relevant quality "
-                 f"is closer to the {overall_score} overall number than to the worst-case per-field figure."),
+                 f"Analysis touching a flagged field: expect more drift than the {overall_score} headline. "
+                 "Analysis avoiding flagged fields: closer to the overall number."),
                 ("Watch point",
-                 "Confirm that the per-field validation on any field you will use looks healthy, "
-                 "independent of the overall headline. The correlation preservation score "
-                 f"({correlation}) is the honest read on how joint relationships held up."),
+                 f"Correlation preservation is {correlation}. That is the honest read on joint "
+                 "relationships. Per-field validation is the read on marginals."),
             ],
         )
     if any(k in m for k in ["stakeholder", "clinician", "ops", "manager", "audit"]):
         return _connected_reply(
-            "Different stakeholders read the same synthetic package through quite different lenses — "
-            "usefulness, risk, and audit posture all weigh differently.",
+            "Different stakeholders read the same package through different lenses.",
             [
                 ("Stakeholder view",
-                 f"Operations lead: focus on whether the package supports realistic throughput / mix "
-                 f"analysis — overall score {overall_score} suggests it does. Clinical analyst: treat "
-                 "at aggregate level only; records are not patient-linked. Compliance: the audit trail "
-                 "and synthetic-only boundary are the anchors."),
+                 f"Ops lead: throughput and mix analysis, overall {overall_score} supports it. "
+                 "Clinical analyst: aggregate-level only; records are not patient-linked. "
+                 "Compliance: audit trail and synthetic-only boundary are the anchors."),
                 ("Pattern",
-                 f"The {correlation} correlation preservation means joint relationships across fields "
-                 "held up meaningfully, which is usually the dimension operations and analyst readers "
-                 "care about most."),
+                 f"Correlation preservation at {correlation} covers joint relationships across fields — "
+                 "usually the dimension ops and analyst readers care about most."),
                 ("Watch point",
-                 "Be explicit with every downstream stakeholder that this is synthetic sandbox output — "
-                 "not clinical-decision material."),
+                 "Mark synthetic-sandbox status on any stakeholder deliverable. Not clinical-decision material."),
             ],
         )
     # Generic Connected fallback
     return _connected_reply(
-        f"Connected Agent reads this package as a bounded but usable synthetic asset: overall quality "
-        f"{overall_score}, privacy {privacy_score}, correlation {correlation}.",
+        f"Overall {overall_score}, privacy {privacy_score}, correlation {correlation}. "
+        "Bounded but usable synthetic asset.",
         [
             ("Pattern",
-             "The combination of quality, privacy, and correlation scores gives a first read on what "
-             "kind of downstream work the package can support."),
+             "Quality, privacy, and correlation scores together give the first read on downstream fit."),
             ("Scenario",
-             "Structural and aggregate-level analysis is usually well-served by packages in this range. "
-             "Tail-sensitive or rare-event modelling should proceed with more caution."),
+             "Structural and aggregate-level analysis fits well in this range. "
+             "Tail-sensitive or rare-event modelling needs more caution."),
         ],
-        "Ask a more specific question (a use case, a field, a stakeholder) for richer framing.",
+        "Ask a more specific question — a use case, a field, a stakeholder — for a tighter read.",
     )
