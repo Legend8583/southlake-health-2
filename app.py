@@ -8852,6 +8852,20 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
             else "Approved synthetic-only payload is ready. Activate Connected Agent to begin live analysis."
         )
 
+    runtime_expanded = bool(st.session_state.get("step6_open_runtime", False))
+    runtime_title = "Connected setup" if not has_api_key else "Connected setup & payload"
+    runtime_caption = (
+        "Add your Claude key only when you want the advanced connected layer. The key stays in session only."
+        if not has_api_key
+        else "API connection and payload scope for the connected layer."
+    )
+    with st.expander(runtime_title, expanded=runtime_expanded):
+        st.caption(runtime_caption)
+        _render_agent_api_panel()
+        if has_api_key:
+            st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
+            _render_external_payload_panel(metadata, controls, runtime_allowed=has_api_key)
+
     with st.container(border=True, key="step6_agent_shell"):
         st.markdown(
             '<div class="step6-kicker">Agent workspace</div>'
@@ -8898,20 +8912,6 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
                     st.rerun()
                 if preview_cols[1].button("Return to Local mode", use_container_width=True, key="step6_preview_back_local_gate"):
                     activate_local_mode()
-
-    runtime_expanded = bool(st.session_state.get("step6_open_runtime", False))
-    runtime_title = "Connected setup" if not has_api_key else "Connected setup & payload"
-    runtime_caption = (
-        "Add your Claude key only when you want the advanced connected layer. The key stays in session only."
-        if not has_api_key
-        else "API connection and payload scope for the connected layer."
-    )
-    with st.expander(runtime_title, expanded=runtime_expanded):
-        st.caption(runtime_caption)
-        _render_agent_api_panel()
-        if has_api_key:
-            st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
-            _render_external_payload_panel(metadata, controls, runtime_allowed=has_api_key)
 
 
 def render_step_five(metadata: list[dict[str, Any]], controls: dict[str, Any]) -> None:
