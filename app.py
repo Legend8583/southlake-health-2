@@ -8420,36 +8420,6 @@ def _render_local_analysis_summary(
             '</div>'
         )
 
-    # Verdict-first headline — Local Agent's signature output style
-    if high_findings > 0:
-        verdict_label, verdict_color, verdict_bg, verdict_border = "Blocker", "#9d2b3c", "#fff1f3", "#F2C9D1"
-        verdict_sentence = f"{high_findings} high-severity hygiene finding(s) must be cleared before release."
-    elif overall_score == 0:
-        verdict_label, verdict_color, verdict_bg, verdict_border = "Hold", "#9C6A17", "#FFF6E3", "#F0DDB5"
-        verdict_sentence = "No validation on record yet — generate a synthetic preview first."
-    elif overall_score < 60:
-        verdict_label, verdict_color, verdict_bg, verdict_border = "Hold", "#9C6A17", "#FFF6E3", "#F0DDB5"
-        verdict_sentence = f"Overall quality {overall_score:.1f} below sandbox threshold — adjust controls and regenerate."
-    elif privacy_score < 70 or overall_score < 75:
-        verdict_label, verdict_color, verdict_bg, verdict_border = "Warning", "#9C6A17", "#FFF6E3", "#F0DDB5"
-        verdict_sentence = f"Overall {overall_score:.1f} · privacy {privacy_score:.1f} — review per-field drift before downstream use."
-    else:
-        verdict_label, verdict_color, verdict_bg, verdict_border = "Ready", "#136B48", "#EDF9F3", "#B8E3CC"
-        verdict_sentence = f"Overall {overall_score:.1f} · privacy {privacy_score:.1f} · correlation {correlation_score:.1f} — cleared for internal sandbox use."
-
-    st.markdown(
-        f'<div style="display:flex;align-items:center;gap:0.8rem;padding:0.75rem 1rem;'
-        f'background:{verdict_bg};border:1px solid {verdict_border};border-left:4px solid {verdict_color};'
-        f'border-radius:12px;margin-bottom:0.85rem;">'
-        f'<span style="display:inline-flex;align-items:center;padding:0.2rem 0.6rem;background:{verdict_color};'
-        f'color:#ffffff;font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border-radius:999px;">'
-        f'{verdict_label}</span>'
-        f'<span style="font-size:0.92rem;color:#17324d;line-height:1.45;font-weight:500;">'
-        f'{html.escape(verdict_sentence)}</span>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
-
     st.markdown(
         '<div class="step6-local-grid">'
         + build_local_card(
