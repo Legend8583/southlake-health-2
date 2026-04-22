@@ -2086,90 +2086,224 @@ def inject_styles() -> None:
                 flex: 0 0 auto;
             }
 
-            /* ── New Local Agent layout (v2) ───────────────────────── */
-            .step6-metric-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 0.72rem;
-                margin-top: 0.95rem;
-            }
-
-            .step6-metric-tile {
+            /* ── New Local Agent layout (v2 hero) ───────────────────── */
+            .step6-mode-tile-v2 {
                 background: #ffffff;
                 border: 1px solid rgba(15, 39, 66, 0.1);
-                border-radius: 14px;
-                padding: 1rem 1.1rem;
+                border-radius: 16px;
+                padding: 1.15rem 1.25rem;
+                margin-bottom: 0.7rem;
                 box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
             }
 
-            .step6-metric-label {
+            .step6-mode-tile-v2.is-active {
+                border-color: rgba(11, 94, 168, 0.5);
+                box-shadow: 0 4px 14px rgba(11, 94, 168, 0.08);
+            }
+
+            .step6-mode-tile-v2 .step6-mode-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 0.8rem;
+                margin-bottom: 0.85rem;
+            }
+
+            .step6-mode-tile-v2 .step6-mode-eyebrow {
                 color: #6f8297;
                 font-size: 0.7rem;
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
-                margin-bottom: 0.1rem;
+                margin-bottom: 0.22rem;
             }
 
-            .step6-metric-value {
+            .step6-mode-tile-v2 .step6-mode-name {
                 color: #10263f;
-                font-size: 1.95rem;
+                font-size: 1.1rem;
                 font-weight: 800;
-                line-height: 1.1;
-                letter-spacing: -0.01em;
-                font-variant-numeric: tabular-nums;
+                line-height: 1.3;
             }
 
-            .step6-metric-tag {
-                align-self: flex-start;
-                display: inline-flex;
-                margin-top: 0.42rem;
-                padding: 0.15rem 0.55rem;
+            .step6-mode-tile-v2 .step6-mode-state {
+                flex: 0 0 auto;
+                padding: 0.22rem 0.62rem;
                 border-radius: 999px;
-                border: 1px solid transparent;
-                font-size: 0.72rem;
+                background: #F1F5F9;
+                color: #6f8297;
+                font-size: 0.7rem;
                 font-weight: 700;
-                letter-spacing: 0.01em;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
             }
 
-            .step6-summary-row {
-                margin-top: 0.78rem;
-                padding: 0.6rem 0.85rem;
-                background: #f5f8fb;
-                border: 1px solid rgba(15, 39, 66, 0.07);
-                border-radius: 10px;
+            .step6-mode-tile-v2 .step6-mode-state.is-active {
+                background: rgba(11, 94, 168, 0.12);
+                color: #0b5ea8;
+            }
+
+            .step6-mode-tile-v2 .step6-mode-points {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.42rem;
+            }
+
+            .step6-mode-tile-v2 .step6-mode-points li {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.5rem;
                 color: #27425c;
-                font-size: 0.82rem;
+                font-size: 0.86rem;
                 line-height: 1.5;
             }
 
-            .step6-section-divider {
+            .step6-mode-tile-v2 .step6-mode-points li::before {
+                content: "";
+                width: 0.3rem;
+                height: 0.3rem;
+                border-radius: 999px;
+                background: rgba(58, 111, 180, 0.65);
+                margin-top: 0.48rem;
+                flex: 0 0 auto;
+            }
+
+            .step6-privacy-footnote {
                 display: flex;
                 align-items: center;
-                gap: 0.75rem;
-                margin: 1.35rem 0 0.55rem 0;
+                justify-content: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                margin-top: 1rem;
+                padding-top: 0.9rem;
+                border-top: 1px solid rgba(15, 39, 66, 0.08);
+                font-size: 0.76rem;
+                color: #6f8297;
+                line-height: 1.5;
             }
 
-            .step6-section-divider::before,
-            .step6-section-divider::after {
-                content: "";
-                flex: 1;
-                height: 1px;
-                background: rgba(15, 39, 66, 0.09);
+            .step6-privacy-footnote-label {
+                color: #0b5ea8;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 0.7rem;
             }
 
-            .step6-section-label {
+            .step6-privacy-dot {
+                color: #bfcad6;
+            }
+
+            /* ── Agent workspace hero (2-column layout) ─────────────── */
+            .step6-hero-kicker {
                 color: #6f8297;
                 font-size: 0.7rem;
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
+                margin-bottom: 0.7rem;
+                margin-top: 0.25rem;
             }
 
-            .step6-briefing-card {
+            .step6-hero-kicker-sub {
+                margin-top: 0;
+            }
+
+            .step6-hero-left {
+                background: #ffffff;
+                border: 1px solid rgba(15, 39, 66, 0.1);
+                border-radius: 16px;
+                padding: 1.2rem 1.3rem;
+                box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
+                height: 100%;
+            }
+
+            .step6-hero-left .step6-hero-kicker {
+                margin-top: 0;
+            }
+
+            .step6-metric-row {
+                display: flex;
+                align-items: center;
+                gap: 0.9rem;
+                padding: 0.45rem 0;
+            }
+
+            .step6-metric-row + .step6-metric-row {
+                border-top: 1px solid rgba(15, 39, 66, 0.06);
+            }
+
+            .step6-metric-row-value {
+                color: #10263f;
+                font-size: 1.7rem;
+                font-weight: 800;
+                line-height: 1;
+                letter-spacing: -0.01em;
+                font-variant-numeric: tabular-nums;
+                min-width: 3.5rem;
+            }
+
+            .step6-metric-row-text {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .step6-metric-row-label {
+                color: #27425c;
+                font-size: 0.86rem;
+                font-weight: 600;
+                line-height: 1.2;
+            }
+
+            .step6-metric-row-tag {
+                display: inline-flex;
+                padding: 0.12rem 0.5rem;
+                border-radius: 999px;
+                border: 1px solid transparent;
+                font-size: 0.7rem;
+                font-weight: 700;
+            }
+
+            .step6-hero-divider {
+                height: 1px;
+                background: rgba(15, 39, 66, 0.08);
+                margin: 1rem 0 0.85rem 0;
+            }
+
+            .step6-hero-snapshot {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.42rem;
+            }
+
+            .step6-hero-snapshot li {
+                color: #27425c;
+                font-size: 0.82rem;
+                line-height: 1.5;
+                padding-left: 0.9rem;
+                position: relative;
+            }
+
+            .step6-hero-snapshot li::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0.55rem;
+                width: 0.3rem;
+                height: 0.3rem;
+                border-radius: 999px;
+                background: rgba(58, 111, 180, 0.55);
+            }
+
+            .step6-briefing-card-v2 {
                 margin-top: 1rem;
                 background: #ffffff;
                 border: 1px solid rgba(15, 39, 66, 0.1);
@@ -2178,36 +2312,36 @@ def inject_styles() -> None:
                 box-shadow: 0 1px 2px rgba(15, 39, 66, 0.04);
             }
 
-            .step6-briefing-title {
+            .step6-briefing-card-v2 .step6-briefing-title {
                 color: #10263f;
-                font-size: 1.08rem;
+                font-size: 1.05rem;
                 font-weight: 800;
                 line-height: 1.3;
-                margin-bottom: 0.55rem;
+                margin-bottom: 0.5rem;
             }
 
-            .step6-briefing-body {
+            .step6-briefing-card-v2 .step6-briefing-body {
                 color: #334a63;
-                font-size: 0.92rem;
+                font-size: 0.9rem;
                 line-height: 1.6;
             }
 
-            .step6-briefing-divider {
+            .step6-briefing-card-v2 .step6-briefing-divider {
                 height: 1px;
                 background: rgba(15, 39, 66, 0.08);
                 margin: 1rem 0 0.9rem 0;
             }
 
-            .step6-briefing-subtitle {
+            .step6-briefing-card-v2 .step6-briefing-subtitle {
                 color: #6f8297;
-                font-size: 0.72rem;
+                font-size: 0.7rem;
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
                 margin-bottom: 0.55rem;
             }
 
-            .step6-action-list {
+            .step6-briefing-card-v2 .step6-action-list {
                 list-style: none;
                 margin: 0;
                 padding: 0;
@@ -2216,23 +2350,23 @@ def inject_styles() -> None:
                 gap: 0.55rem;
             }
 
-            .step6-action-list li {
+            .step6-briefing-card-v2 .step6-action-list li {
                 display: flex;
                 align-items: flex-start;
                 gap: 0.7rem;
                 color: #27425c;
-                font-size: 0.88rem;
+                font-size: 0.86rem;
                 line-height: 1.55;
             }
 
-            .step6-action-num {
+            .step6-briefing-card-v2 .step6-action-num {
                 flex: 0 0 auto;
-                width: 1.35rem;
-                height: 1.35rem;
+                width: 1.3rem;
+                height: 1.3rem;
                 border-radius: 999px;
                 background: rgba(11, 94, 168, 0.1);
                 color: #0b5ea8;
-                font-size: 0.75rem;
+                font-size: 0.72rem;
                 font-weight: 800;
                 display: inline-flex;
                 align-items: center;
@@ -8564,79 +8698,58 @@ def _render_local_analysis_summary(
     else:
         stability_note = "Mixed"
 
-    # ── Metric tiles (replaces the 3 checklist-style cards) ────────
-    def build_metric_tile(label: str, value: str, tag: str, tag_kind: str) -> str:
-        # tag_kind: "good" / "warn" / "bad" controls the pill color
-        tag_colors = {
-            "good": ("#136B48", "#EDF9F3", "#B8E3CC"),
-            "warn": ("#9C6A17", "#FFF6E3", "#F0DDB5"),
-            "bad":  ("#9d2b3c", "#fff1f3", "#F2C9D1"),
-            "neutral": ("#456b91", "#F1F5F9", "#D8E1EA"),
-        }
-        fg, bg, bd = tag_colors.get(tag_kind, tag_colors["neutral"])
-        return (
-            '<div class="step6-metric-tile">'
-            f'<div class="step6-metric-label">{html.escape(label)}</div>'
-            f'<div class="step6-metric-value">{html.escape(value)}</div>'
-            f'<span class="step6-metric-tag" style="color:{fg};background:{bg};border-color:{bd};">{html.escape(tag)}</span>'
-            '</div>'
-        )
-
     quality_kind = "good" if overall_score >= 75 else ("warn" if overall_score >= 60 else "bad")
     privacy_kind = "good" if privacy_score >= 80 else ("warn" if privacy_score >= 65 else "bad")
     correlation_kind = "good" if correlation_score >= 85 else ("warn" if correlation_score >= 70 else "bad")
 
-    st.markdown(
-        '<div class="step6-metric-grid">'
-        + build_metric_tile("Overall quality", f"{overall_score:.1f}", quality_note, quality_kind)
-        + build_metric_tile("Privacy", f"{privacy_score:.1f}", privacy_note, privacy_kind)
-        + build_metric_tile("Correlation", f"{correlation_score:.1f}", stability_note, correlation_kind)
-        + '</div>',
-        unsafe_allow_html=True,
-    )
+    tag_colors = {
+        "good":    ("#136B48", "#EDF9F3", "#B8E3CC"),
+        "warn":    ("#9C6A17", "#FFF6E3", "#F0DDB5"),
+        "bad":     ("#9d2b3c", "#fff1f3", "#F2C9D1"),
+        "neutral": ("#456b91", "#F1F5F9", "#D8E1EA"),
+    }
 
-    # Completeness + hygiene summary line — replaces the "Checks" card
-    summary_bits = []
-    summary_bits.append(f"{completeness:.1f}% completeness")
+    def metric_row(label: str, value: str, tag: str, tag_kind: str) -> str:
+        fg, bg, bd = tag_colors.get(tag_kind, tag_colors["neutral"])
+        return (
+            '<div class="step6-metric-row">'
+            f'<div class="step6-metric-row-value">{html.escape(value)}</div>'
+            '<div class="step6-metric-row-text">'
+            f'<div class="step6-metric-row-label">{html.escape(label)}</div>'
+            f'<span class="step6-metric-row-tag" style="color:{fg};background:{bg};border-color:{bd};">{html.escape(tag)}</span>'
+            '</div>'
+            '</div>'
+        )
+
+    # Left column — Package quality metrics stacked vertically + snapshot
+    snapshot_bits = []
+    snapshot_bits.append(f"{completeness:.1f}% completeness")
     if missing_fields:
-        summary_bits.append(f"{missing_fields} field(s) with missing values")
+        snapshot_bits.append(f"{missing_fields} field(s) with missing values")
     if high_findings or medium_findings:
-        summary_bits.append(f"{high_findings} high / {medium_findings} medium hygiene flag(s)")
+        snapshot_bits.append(f"{high_findings} high / {medium_findings} medium hygiene flag(s)")
     if restricted_count or sensitive_count:
-        summary_bits.append(f"{restricted_count} restricted · {sensitive_count} sensitive")
-    st.markdown(
-        '<div class="step6-summary-row">'
-        + '  ·  '.join(html.escape(s) for s in summary_bits)
-        + '</div>',
-        unsafe_allow_html=True,
+        snapshot_bits.append(f"{restricted_count} restricted &middot; {sensitive_count} sensitive field(s)")
+    snapshot_items = "".join(f'<li>{s}</li>' for s in snapshot_bits)
+
+    left_html = (
+        '<div class="step6-hero-left">'
+        '<div class="step6-hero-kicker">Package quality</div>'
+        + metric_row("Overall quality", f"{overall_score:.1f}", quality_note, quality_kind)
+        + metric_row("Privacy", f"{privacy_score:.1f}", privacy_note, privacy_kind)
+        + metric_row("Correlation", f"{correlation_score:.1f}", stability_note, correlation_kind)
+        + '<div class="step6-hero-divider"></div>'
+        '<div class="step6-hero-kicker step6-hero-kicker-sub">Snapshot</div>'
+        f'<ul class="step6-hero-snapshot">{snapshot_items}</ul>'
+        '</div>'
     )
 
-    # ── Role selector ─────────────────────────────────────────────
+    # Role briefing (right column)
     current_role = st.session_state.get("current_role", "Data Analyst")
     local_role_lenses = ["Data Analyst", "Manager / Reviewer", "Privacy Officer"]
     default_lens = current_role if current_role in local_role_lenses else "Data Analyst"
     selected_lens = st.session_state.get("step6_local_role_lens", default_lens)
 
-    st.markdown(
-        '<div class="step6-section-divider">'
-        '<span class="step6-section-label">Role lens</span>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    lens_cols = st.columns(len(local_role_lenses), gap="small")
-    for idx, lens in enumerate(local_role_lenses):
-        if lens_cols[idx].button(
-            lens,
-            use_container_width=True,
-            key=f"step6_local_role_{idx}",
-            type="primary" if selected_lens == lens else "secondary",
-        ):
-            st.session_state.step6_local_role_lens = lens
-            st.rerun()
-    selected_lens = st.session_state.get("step6_local_role_lens", default_lens)
-    st.caption(ROLE_PRIORITY_NOTES.get(selected_lens, ""))
-
-    # ── Role briefing + actions ───────────────────────────────────
     if selected_lens == "Data Analyst":
         role_title = "Analyst briefing"
         role_summary = (
@@ -8675,20 +8788,39 @@ def _render_local_analysis_summary(
             "Escalate review if the package use extends beyond controlled internal testing.",
         ]
 
-    action_items_html = "".join(
-        f'<li><span class="step6-action-num">{i+1}</span><span>{html.escape(a)}</span></li>'
-        for i, a in enumerate(role_actions)
-    )
-    st.markdown(
-        '<div class="step6-briefing-card">'
-        f'<div class="step6-briefing-title">{html.escape(role_title)}</div>'
-        f'<div class="step6-briefing-body">{html.escape(role_summary)}</div>'
-        f'<div class="step6-briefing-divider"></div>'
-        '<div class="step6-briefing-subtitle">Next actions</div>'
-        f'<ol class="step6-action-list">{action_items_html}</ol>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+    # Two-column hero layout
+    hero_cols = st.columns([0.88, 1.12], gap="large")
+    with hero_cols[0]:
+        st.markdown(left_html, unsafe_allow_html=True)
+    with hero_cols[1]:
+        st.markdown('<div class="step6-hero-kicker">Role lens</div>', unsafe_allow_html=True)
+        lens_cols = st.columns(len(local_role_lenses), gap="small")
+        for idx, lens in enumerate(local_role_lenses):
+            if lens_cols[idx].button(
+                lens,
+                use_container_width=True,
+                key=f"step6_local_role_{idx}",
+                type="primary" if selected_lens == lens else "secondary",
+            ):
+                st.session_state.step6_local_role_lens = lens
+                st.rerun()
+        selected_lens = st.session_state.get("step6_local_role_lens", default_lens)
+        st.caption(ROLE_PRIORITY_NOTES.get(selected_lens, ""))
+
+        action_items_html = "".join(
+            f'<li><span class="step6-action-num">{i+1}</span><span>{html.escape(a)}</span></li>'
+            for i, a in enumerate(role_actions)
+        )
+        st.markdown(
+            '<div class="step6-briefing-card-v2">'
+            f'<div class="step6-briefing-title">{html.escape(role_title)}</div>'
+            f'<div class="step6-briefing-body">{html.escape(role_summary)}</div>'
+            f'<div class="step6-briefing-divider"></div>'
+            '<div class="step6-briefing-subtitle">Next actions</div>'
+            f'<ol class="step6-action-list">{action_items_html}</ol>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def _render_chat_module(
@@ -8836,8 +8968,27 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
             unsafe_allow_html=True,
         )
 
-        _, select_local_col, select_connected_col, _ = st.columns([1.2, 1, 1, 1.2], gap="small")
-        with select_local_col:
+        mode_cols = st.columns(2, gap="medium")
+
+        with mode_cols[0]:
+            local_card_html = (
+                f'<div class="step6-mode-tile-v2{" is-active" if mode == "internal" else ""}">'
+                '<div class="step6-mode-top">'
+                '<div>'
+                '<div class="step6-mode-eyebrow">Default &middot; Always available</div>'
+                '<div class="step6-mode-name">Local Agent</div>'
+                '</div>'
+                f'<span class="step6-mode-state{" is-active" if mode == "internal" else ""}">'
+                f'{"Current" if mode == "internal" else "Available"}</span>'
+                '</div>'
+                '<ul class="step6-mode-points">'
+                '<li>Fast first-pass workflow reasoning</li>'
+                '<li>Readiness, blocker, and release interpretation</li>'
+                '<li>Fully in-workspace &mdash; no external model involved</li>'
+                '</ul>'
+                '</div>'
+            )
+            st.markdown(local_card_html, unsafe_allow_html=True)
             if st.button(
                 "Stay in Local mode",
                 use_container_width=True,
@@ -8846,7 +8997,26 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
             ):
                 if mode != "internal":
                     activate_local_mode()
-        with select_connected_col:
+
+        with mode_cols[1]:
+            connected_card_html = (
+                f'<div class="step6-mode-tile-v2{" is-active" if mode == "external" else ""}">'
+                '<div class="step6-mode-top">'
+                '<div>'
+                '<div class="step6-mode-eyebrow">Downstream &middot; Governance-gated</div>'
+                '<div class="step6-mode-name">Connected Agent</div>'
+                '</div>'
+                f'<span class="step6-mode-state{" is-active" if mode == "external" else ""}">'
+                f'{html.escape(connected_state)}</span>'
+                '</div>'
+                '<ul class="step6-mode-points">'
+                '<li>Deeper interpretation of the approved synthetic package</li>'
+                '<li>Richer narrative and scenario framing</li>'
+                '<li>Synthetic-only &mdash; no source records ever leave the workspace</li>'
+                '</ul>'
+                '</div>'
+            )
+            st.markdown(connected_card_html, unsafe_allow_html=True)
             if st.button(
                 "Escalate to Connected",
                 use_container_width=True,
@@ -8858,44 +9028,13 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
                         st.session_state.step6_open_runtime = True
                     activate_connected_preview()
 
-        _, local_card_col, connected_card_col, _ = st.columns([0.3, 1, 1, 0.3], gap="medium")
-        local_card_html = (
-            f'<div class="step6-mode-tile{" is-active" if mode == "internal" else ""}">'
-            '<div class="step6-mode-top">'
-            '<div><div class="step6-mode-eyebrow">Default &middot; Always available</div><div class="step6-mode-name">Local Agent</div></div>'
-            f'<span class="step6-mode-state{" is-active" if mode == "internal" else ""}">{"Current" if mode == "internal" else "Available"}</span>'
-            '</div>'
-            '<ul class="step6-mode-points">'
-            '<li>Fast first-pass workflow reasoning</li>'
-            '<li>Readiness, blocker, and release interpretation</li>'
-            '<li>Fully in-workspace &mdash; no external model involved</li>'
-            '</ul>'
-            '</div>'
-        )
-        connected_card_html = (
-            f'<div class="step6-mode-tile{" is-active" if mode == "external" else ""}">'
-            '<div class="step6-mode-top">'
-            '<div><div class="step6-mode-eyebrow">Downstream &middot; Governance-gated</div><div class="step6-mode-name">Connected Agent</div></div>'
-            f'<span class="step6-mode-state{" is-active" if mode == "external" else ""}">{html.escape(connected_state)}</span>'
-            '</div>'
-            '<ul class="step6-mode-points">'
-            '<li>Deeper interpretation of the approved synthetic package</li>'
-            '<li>Richer narrative and scenario framing</li>'
-            '<li>Synthetic-only &mdash; no source records ever leave the workspace</li>'
-            '</ul>'
-            '</div>'
-        )
-        local_card_col.markdown(local_card_html, unsafe_allow_html=True)
-        connected_card_col.markdown(connected_card_html, unsafe_allow_html=True)
         st.markdown(
-            '<div class="step6-mode-summary">'
-            f'<span><strong>Current mode</strong> {html.escape(verdict_label)}</span>'
-            f'<span><strong>Connected</strong> {html.escape(connected_status)}</span>'
-            '</div>'
-            '<div class="step6-privacy-strip">'
-            '<span class="step6-privacy-label">Privacy boundary</span>'
+            '<div class="step6-privacy-footnote">'
+            '<span class="step6-privacy-footnote-label">Privacy boundary</span>'
             '<span>No source records sent externally</span>'
+            '<span class="step6-privacy-dot">&middot;</span>'
             '<span>Only synthetic output is eligible</span>'
+            '<span class="step6-privacy-dot">&middot;</span>'
             '<span>Governance conditions must pass first</span>'
             '</div>',
             unsafe_allow_html=True,
