@@ -8167,8 +8167,6 @@ def _render_external_payload_panel(
             '</div>',
             unsafe_allow_html=True,
         )
-        with st.expander("View exact payload sent to Connected Agent", expanded=False):
-            st.code(json.dumps(payload, indent=2, default=str), language="json")
 
 
 def _render_ask_agent_chat(
@@ -8214,9 +8212,9 @@ def _render_ask_agent_chat(
         capability_pills = ["Synthetic only", "Narrative framing", "Scenario-aware"]
         input_placeholder = "Ask for patterns, scenarios, or stakeholder framing on the approved synthetic output…"
         default_prompts = [
-            "What patterns in this synthetic package should I flag for operations?",
-            "Compare this package to a stronger-privacy setting — what changes downstream?",
-            "How should clinical analysts and compliance read this differently?",
+            "What 3 things should an operations lead know about this package?",
+            "If I was briefing a compliance officer, what would I say?",
+            "Is this package better for throughput analysis or individual-level modeling?",
         ]
     elif live_mode and not api_key:
         mode_note = "Connected Agent selected — add an API key to activate. Until then, Local Agent responses are served."
@@ -8836,9 +8834,9 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
 
     if connected_live:
         suggested_prompts = [
-            "What patterns in this synthetic package should I flag for operations?",
-            "Compare this package to a stronger-privacy setting — what shifts downstream?",
-            "How should operations, clinical analysts, and compliance read this differently?",
+            "What 3 things should an operations lead know about this package?",
+            "If I was briefing a compliance officer, what would I say?",
+            "Is this package better for throughput analysis or individual-level modeling?",
         ]
         workspace_title = "Connected Agent &middot; Synthetic analysis"
         workspace_subheading = "Live deeper analysis on the approved synthetic package. No source records are sent externally."
