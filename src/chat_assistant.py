@@ -44,6 +44,12 @@ LOCAL_SYSTEM_PROMPT = (
     "\n\nMODE: First-pass workflow reasoning. Fast, bounded, operational. "
     "You are the default governed agent — the one analysts hit first to decide whether a package is "
     "ready, held, or blocked. "
+    "\n\nGREETING / TINY TALK: If the user input is a greeting (hi, hello, hey, thanks, ok, test, etc.), "
+    "a single-word message, or any input with no analytical intent, DO NOT produce a verdict or full "
+    "response. Instead reply with 2–3 short sentences max: acknowledge briefly, state what Local Agent "
+    "is for (readiness / blockers / release decisions), and invite one concrete question. No bullets, "
+    "no verdict label, no 'Next action' line in this case. "
+    "\n\nFor real analytical or workflow questions, use the STRICT style below."
     "\n\nSTYLE — strict:"
     "\n  1) Open with a VERDICT LABEL in bold: **Ready**, **Hold**, **Blocker**, **Warning**, or **Not applicable**. "
     "Follow the label with a single-sentence verdict (≤ 22 words). "
@@ -67,6 +73,14 @@ CONNECTED_SYSTEM_PROMPT = (
     "\n\nMODE: Deeper analytical layer on the approved synthetic package. Connected Agent is only reached "
     "after governance gates have passed and the synthetic payload is ready. Your job is richer "
     "interpretation and scenario framing — not decision-making. "
+    "\n\nGREETING / TINY TALK: If the user input is a greeting (hi, hello, hey, thanks, ok, test, etc.), "
+    "a single-word message, or any input with no analytical intent, DO NOT produce a full narrative "
+    "analysis. Instead reply with 2–3 short sentences max: a brief acknowledgement, a one-line "
+    "description of what Connected Agent explores (patterns / scenarios / stakeholder framing on the "
+    "approved synthetic package), and invite one concrete analytical question. No **Pattern —** / "
+    "**Scenario —** / **Watch point —** sections in this case. No framing sentence about the package. "
+    "Conversational but still professional. "
+    "\n\nFor real analytical questions, use the STRICT style below."
     "\n\nSTYLE — strict:"
     "\n  1) Open with one short interpretive framing sentence that reads the package at a high level "
     "(1–2 sentences, ≤ 45 words). No verdict label. "
@@ -285,9 +299,57 @@ def _connected_reply(framing: str, sections: list[tuple[str, str]],
     return "\n".join(parts)
 
 
+def _is_greeting_or_noise(msg: str) -> bool:
+    """Detect casual greetings, test inputs, or no-intent messages."""
+    m = (msg or "").strip().lower()
+    if not m:
+        return True
+    # Short single-word / 2-word casual inputs
+    greetings = {
+        "hi", "hello", "hey", "yo", "hola", "sup", "greetings",
+        "thanks", "thank you", "ty", "thx", "ok", "okay", "cool", "nice",
+        "test", "testing", "ping", "?", "??", "...",
+        "bye", "goodbye", "later",
+        "你好", "您好", "哈喽",
+    }
+    if m in greetings:
+        return True
+    # Very short and no analytical keywords
+    word_count = len(m.split())
+    if word_count <= 2:
+        analytical_keywords = {
+            "ready", "block", "blocker", "release", "share", "approve", "hygiene",
+            "quality", "privacy", "fidelity", "epsilon", "drift", "pattern",
+            "scenario", "stakeholder", "governance", "audit", "metadata",
+            "copula", "constraint", "issue", "warning", "next", "action",
+            "overall", "score", "synthetic", "generate", "preview",
+        }
+        if not any(k in m for k in analytical_keywords):
+            return True
+    return False
+
+
 def _fallback(msg: str, profile=None, hygiene=None, controls=None, validation=None,
               mode: str = "local") -> str:
     m = msg.lower().strip()
+
+    # ── GREETING / TINY TALK — short friendly redirect ─────────────────
+    if _is_greeting_or_noise(msg):
+        if mode == "local":
+            return (
+                "Hi — **Local Agent** here, the default in-workspace reasoning layer for "
+                "readiness, blockers, and release decisions.\n\n"
+                "Ask me something concrete, for example: *\"Is this package ready to share?\"*, "
+                "*\"What blockers are still open?\"*, or *\"What should I do next?\"*"
+            )
+        return (
+            "Hi — **Connected Agent** here. I explore patterns, scenarios, and stakeholder framing "
+            "on the approved synthetic package.\n\n"
+            "Ask me something concrete, for example: *\"What patterns should I flag for operations?\"*, "
+            "*\"How should compliance read this package?\"*, or *\"How would a stronger-privacy "
+            "setting change downstream use?\"*"
+        )
+
     fp = (controls or {}).get("fidelity_priority", 50)
     rows = (profile or {}).get("summary", {}).get("rows", "the current package")
     overall_score = (validation or {}).get("overall_score", "pending")
