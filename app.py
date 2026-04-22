@@ -8209,32 +8209,48 @@ def _render_ask_agent_chat(
 
     will_call_api = bool(live_mode and api_key)
     if will_call_api:
-        mode_note = "Ask analytical questions only. Replies are grounded in the approved synthetic package and governance context."
-        mode_chip = "Connected live"
-        capability_pills = ["Synthetic only", "Structured output", "Deeper reasoning"]
-        input_placeholder = "Ask for deeper analysis, weaknesses, hypotheses, or next steps…"
+        mode_note = "Connected Agent · deeper interpretation on the approved synthetic package. No source records leave the workspace."
+        mode_chip = "Connected Agent"
+        capability_pills = ["Synthetic only", "Narrative framing", "Scenario-aware"]
+        input_placeholder = "Ask for patterns, scenarios, or stakeholder framing on the approved synthetic output…"
+        default_prompts = [
+            "What patterns in this synthetic package should I flag for operations?",
+            "Compare this package to a stronger-privacy setting — what changes downstream?",
+            "How should clinical analysts and compliance read this differently?",
+        ]
     elif live_mode and not api_key:
-        mode_note = "Connected Agent is selected, but an API key is still needed."
+        mode_note = "Connected Agent selected — add an API key to activate. Until then, Local Agent responses are served."
         mode_chip = "Connected setup"
         capability_pills = ["API key required", "Preview only", "Synthetic only"]
-        input_placeholder = "Ask what the connected layer could help you do…"
+        input_placeholder = "Ask what the Connected Agent layer could help you do…"
+        default_prompts = [
+            "What would the Connected Agent add beyond Local Agent?",
+            "Is this package ready to share with analytics teams?",
+            "What should I watch for before escalating to deeper analysis?",
+        ]
     elif external_selected:
-        mode_note = "Connected Agent is selected, but live analysis is still gated."
-        mode_chip = "Connected preview"
-        capability_pills = ["Preview only", "Synthetic only", "Governed access"]
-        input_placeholder = "Ask what to prepare before enabling the connected layer…"
+        mode_note = "Connected Preview · approved synthetic payload is ready. Governance conditions still need to pass for live Connected Agent."
+        mode_chip = "Connected Preview"
+        capability_pills = ["Preview only", "Synthetic only", "Governance-gated"]
+        input_placeholder = "Ask what to prepare before Connected Agent goes live…"
+        default_prompts = [
+            "Is this package ready to share with analytics teams?",
+            "What should I verify before activating Connected Agent?",
+            "Which readiness gate is still outstanding?",
+        ]
     else:
-        mode_note = "Local Agent is active inside the workspace."
-        mode_chip = "Local only"
-        capability_pills = ["Private", "Synthetic only", "Fast checks"]
-        input_placeholder = "Ask what this package is good for or what to inspect next…"
+        mode_note = "Local Agent · fast in-workspace reasoning. No external model involved."
+        mode_chip = "Local Agent"
+        capability_pills = ["In-workspace", "Verdict-first", "Workflow-ready"]
+        input_placeholder = "Ask about readiness, blockers, hygiene, or the next step…"
+        default_prompts = [
+            "Is this package ready to share?",
+            "What blockers are still open?",
+            "What should I do next?",
+        ]
 
     if prompt_tabs is None:
-        suggested_prompts = [
-            "What should I do next with this package?",
-            "Is local analysis enough for this decision?",
-            "What could the connected agent help me discover here?",
-        ]
+        suggested_prompts = default_prompts
     elif isinstance(prompt_tabs, dict):
         suggested_prompts = []
         for group in prompt_tabs.values():
@@ -8315,17 +8331,15 @@ def _render_ask_agent_chat(
     user_input = pending or st.chat_input(input_placeholder, key="step6_analysis_chatbox")
     if user_input:
         history.append({"role": "user", "content": user_input})
-        analysis_context = (
-            context
-            + "\n\nConnected Agent response rules:"
-            + "\n- This is a professional analysis assistant, not a casual chat."
-            + "\n- Use concise analytical language."
-            + "\n- Do not use markdown headings like #, ##, or ###."
-            + "\n- Do not use horizontal rules."
-            + "\n- Prefer short bold section labels or tight bullet lists."
-            + "\n- Keep the response clean and presentation-ready inside the app."
+        # Determine agent mode:
+        # - Connected Agent runtime active  -> deeper interpretive narrative
+        # - Fallback (no key / gated)       -> Local-style verdict-first reasoning
+        agent_mode = "connected" if will_call_api else "local"
+        spinner_label = (
+            "Generating deeper Connected Agent analysis…"
+            if will_call_api else
+            "Preparing Local Agent response…"
         )
-        spinner_label = "Analyzing with Connected Agent…" if will_call_api else "Preparing deterministic analysis…"
         with st.spinner(spinner_label):
             try:
                 effective_key = api_key if will_call_api else ""
@@ -8333,13 +8347,14 @@ def _render_ask_agent_chat(
                     api_key=effective_key,
                     user_message=user_input,
                     chat_history=history[:-1],
-                    context=analysis_context,
+                    context=context,
                     role=st.session_state.get("current_role"),
+                    mode=agent_mode,
                 )
             except Exception as exc:
                 reply = (
-                    f"Structured fallback: the external model is unavailable ({type(exc).__name__}: {exc}). "
-                    "The workspace stayed in deterministic mode for this response."
+                    f"Structured fallback: Connected Agent runtime unavailable ({type(exc).__name__}: {exc}). "
+                    "Local Agent response served instead."
                 )
         history.append({"role": "assistant", "content": reply})
         st.session_state.agent_chat_history = history
@@ -8387,14 +8402,14 @@ def _render_local_analysis_summary(
         stability_note = "Pattern stability is mixed; validate core fields before reuse."
 
     checks = [
-        f"Missing values across {missing_fields} field(s)" if missing_fields else "Low missingness, but still verify completeness",
-        f"{high_findings} high / {medium_findings} medium hygiene findings" if (high_findings or medium_findings) else "Outlier presence in numeric fields",
-        "Field consistency across dates and sensitive columns",
+        f"Missing values flagged across {missing_fields} field(s)" if missing_fields else "Low missingness; confirm completeness",
+        f"{high_findings} high / {medium_findings} medium hygiene finding(s)" if (high_findings or medium_findings) else "No hygiene blockers on record",
+        f"Restricted fields: {restricted_count} · Sensitive: {sensitive_count}" if (restricted_count or sensitive_count) else "No restricted / sensitive fields flagged",
     ]
     actions = [
-        "Review metadata settings before the next release" if high_findings == 0 else "Review metadata settings for the flagged fields",
-        "Run validation again after any package change",
-        "Switch to Connected Agent only when deeper exploration is needed" if not availability.get("can_use_external") else "Stay local for quick checks or move to Connected for deeper exploration",
+        "Resolve flagged fields before release" if high_findings else "Confirm release scope is sandbox-only",
+        "Rerun validation after any change",
+        "Escalate to Connected Agent for deeper interpretation" if not availability.get("can_use_external") else "Escalate to Connected Agent when you need scenario framing",
     ]
 
     def build_local_card(kicker: str, title: str, items: list[str]) -> str:
@@ -8407,19 +8422,49 @@ def _render_local_analysis_summary(
             '</div>'
         )
 
+    # Verdict-first headline — Local Agent's signature output style
+    if high_findings > 0:
+        verdict_label, verdict_color, verdict_bg, verdict_border = "Blocker", "#9d2b3c", "#fff1f3", "#F2C9D1"
+        verdict_sentence = f"{high_findings} high-severity hygiene finding(s) must be cleared before release."
+    elif overall_score == 0:
+        verdict_label, verdict_color, verdict_bg, verdict_border = "Hold", "#9C6A17", "#FFF6E3", "#F0DDB5"
+        verdict_sentence = "No validation on record yet — generate a synthetic preview first."
+    elif overall_score < 60:
+        verdict_label, verdict_color, verdict_bg, verdict_border = "Hold", "#9C6A17", "#FFF6E3", "#F0DDB5"
+        verdict_sentence = f"Overall quality {overall_score:.1f} below sandbox threshold — adjust controls and regenerate."
+    elif privacy_score < 70 or overall_score < 75:
+        verdict_label, verdict_color, verdict_bg, verdict_border = "Warning", "#9C6A17", "#FFF6E3", "#F0DDB5"
+        verdict_sentence = f"Overall {overall_score:.1f} · privacy {privacy_score:.1f} — review per-field drift before downstream use."
+    else:
+        verdict_label, verdict_color, verdict_bg, verdict_border = "Ready", "#136B48", "#EDF9F3", "#B8E3CC"
+        verdict_sentence = f"Overall {overall_score:.1f} · privacy {privacy_score:.1f} · correlation {correlation_score:.1f} — cleared for internal sandbox use."
+
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:0.8rem;padding:0.75rem 1rem;'
+        f'background:{verdict_bg};border:1px solid {verdict_border};border-left:4px solid {verdict_color};'
+        f'border-radius:12px;margin-bottom:0.85rem;">'
+        f'<span style="display:inline-flex;align-items:center;padding:0.2rem 0.6rem;background:{verdict_color};'
+        f'color:#ffffff;font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border-radius:999px;">'
+        f'{verdict_label}</span>'
+        f'<span style="font-size:0.92rem;color:#17324d;line-height:1.45;font-weight:500;">'
+        f'{html.escape(verdict_sentence)}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
     st.markdown(
         '<div class="step6-local-grid">'
         + build_local_card(
-            "Quick insight",
-            "Local Analysis Summary",
+            "Readiness",
+            "Local Agent summary",
             [
                 quality_note,
                 stability_note,
                 f"{completeness:.1f}% completeness across the current source profile.",
             ],
         )
-        + build_local_card("Suggested checks", "What to verify next", checks)
-        + build_local_card("Next actions", "How to proceed", actions)
+        + build_local_card("Checks", "Verify next", checks)
+        + build_local_card("Next actions", "Proceed with", actions)
         + '</div>',
         unsafe_allow_html=True,
     )
@@ -8791,9 +8836,9 @@ def render_step_six(metadata: list[dict[str, Any]], controls: dict[str, Any]) ->
 
     if connected_live:
         suggested_prompts = [
-            "What patterns should I investigate in this dataset?",
-            "Summarize key risks before deployment.",
-            "What anomalies should I validate next?",
+            "What patterns in this synthetic package should I flag for operations?",
+            "Compare this package to a stronger-privacy setting — what shifts downstream?",
+            "How should operations, clinical analysts, and compliance read this differently?",
         ]
         workspace_title = "Connected Agent &middot; Synthetic analysis"
         workspace_subheading = "Live deeper analysis on the approved synthetic package. No source records are sent externally."

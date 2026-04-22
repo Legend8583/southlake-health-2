@@ -1,7 +1,12 @@
-"""Workflow Agent — Claude API guidance for the governed synthetic data workspace.
+"""Workflow Agent — guidance layer for the governed synthetic data workspace.
 
-Provides orchestration-aware responses to workflow questions. Falls back to
-structured local mode when ANTHROPIC_API_KEY is not configured.
+This module produces two distinct reasoning modes:
+
+  Local Agent      — concise, verdict-first, workflow-oriented
+  Connected Agent  — interpretive, narrative, scenario-aware
+
+Both modes operate only on approved synthetic outputs and metadata. Raw source
+records are never exposed.
 """
 
 from __future__ import annotations
@@ -12,19 +17,82 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 # Claude 4.6 Sonnet — current best Sonnet-class model as of 2026.
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
-SYSTEM_PROMPT = (
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SYSTEM PROMPTS — one per mode, distinct styles
+# ═══════════════════════════════════════════════════════════════════════════
+
+_GOVERNANCE_PREAMBLE = (
     "You are the Agent Guidance layer inside Southlake Health's governed synthetic data workspace "
-    "(Southlake is a 400-bed community hospital in Newmarket, Ontario; ~90K ED visits/yr; MEDITECH Expanse; PHIPA/PIPEDA). "
-    "You help Data Analysts, Managers / Reviewers, and clinical / non-technical stakeholders understand and act on an already-generated synthetic package. "
-    "\n\nCORE BOUNDARY: You only reason about the approved synthetic outputs, metadata, validation, hygiene findings, and release posture that appear in the context block. "
-    "You have no access to raw source records, original identifiers, or row-level patient data and must never fabricate or imply such access. "
-    "\n\nSTYLE: Answer in a compact enterprise analysis format. Use 1 short takeaway sentence, then 2 to 4 bullets, then 1 short next-step sentence unless the user explicitly asks for more. "
-    "Use numbers from the context when relevant. Professional governance-memo tone. No 'Great question', no filler, no exclamation marks. "
-    "Do not use markdown headings, horizontal rules, tables, or code fences. "
-    "Position guidance as suitable for internal modeling sandbox use; never for direct patient care or clinical decision making. "
-    "If asked something outside scope (e.g. about real patient data), politely decline and redirect to the governed artifacts you do have."
+    "(Southlake: 400-bed community hospital, Newmarket, Ontario; ~90K ED visits/yr; MEDITECH Expanse; PHIPA/PIPEDA). "
+    "You help Data Analysts, Managers / Reviewers, and clinical / non-technical stakeholders reason about "
+    "an already-generated synthetic package. "
+    "\n\nCORE BOUNDARY: You only reason about the approved synthetic outputs, metadata, validation state, "
+    "hygiene findings, and governance posture that appear in the context block. You have no access to raw "
+    "source records, original identifiers, or row-level patient data, and must never fabricate or imply "
+    "such access. Guidance is for internal modeling sandbox use only — never for direct patient care or "
+    "clinical decision making. If asked anything outside scope, politely decline and redirect to the governed artifacts. "
+    "\n\nNo markdown headings, horizontal rules, tables, or code fences. No filler openers ('Great question', "
+    "'Certainly'). No exclamation marks."
 )
 
+
+LOCAL_SYSTEM_PROMPT = (
+    _GOVERNANCE_PREAMBLE
+    + "\n\n"
+    "YOU ARE LOCAL AGENT. "
+    "\n\nMODE: First-pass workflow reasoning. Fast, bounded, operational. "
+    "You are the default governed agent — the one analysts hit first to decide whether a package is "
+    "ready, held, or blocked. "
+    "\n\nSTYLE — strict:"
+    "\n  1) Open with a VERDICT LABEL in bold: **Ready**, **Hold**, **Blocker**, **Warning**, or **Not applicable**. "
+    "Follow the label with a single-sentence verdict (≤ 22 words). "
+    "\n  2) Then 2–4 short bullets. Each bullet ≤ 20 words. Tie bullets to concrete numbers or states "
+    "from the context (scores, epsilon, counts, approval status). "
+    "\n  3) End with a single line: `Next action: <one concrete step>`. "
+    "\n  4) Total length: 60–120 words. If the question is purely informational and no verdict applies, "
+    "skip the label but keep the bullet form and next-action line. "
+    "\n\nVOCABULARY: Prefer operational workflow verbs — confirm, block, resolve, proceed, hold, escalate, "
+    "clear, gate. Avoid speculative language (could, might, potentially, perhaps). Avoid narrative framing "
+    "(pattern, scenario, hypothesis — those belong to Connected Agent). "
+    "\n\nAVOID: long essays, exploratory analysis, multi-paragraph interpretation, scenario comparisons, "
+    "stakeholder storytelling. Those are Connected Agent's job."
+)
+
+
+CONNECTED_SYSTEM_PROMPT = (
+    _GOVERNANCE_PREAMBLE
+    + "\n\n"
+    "YOU ARE CONNECTED AGENT. "
+    "\n\nMODE: Deeper analytical layer on the approved synthetic package. Connected Agent is only reached "
+    "after governance gates have passed and the synthetic payload is ready. Your job is richer "
+    "interpretation and scenario framing — not decision-making. "
+    "\n\nSTYLE — strict:"
+    "\n  1) Open with one short interpretive framing sentence that reads the package at a high level "
+    "(1–2 sentences, ≤ 45 words). No verdict label. "
+    "\n  2) Then 2–4 short structured sections. Each section is introduced by ONE of these bold labels "
+    "followed by an em-dash: **Pattern —**, **Scenario —**, **Stakeholder view —**, **Watch point —**, "
+    "**Compared to —**. Each section is 1–3 sentences. "
+    "\n  3) If the user asked about a decision (ready / share / approve), close with a short neutral "
+    "paragraph framing trade-offs — do NOT issue a verdict label. Defer the call to Local Agent / the analyst. "
+    "\n  4) Total length: 180–320 words. "
+    "\n\nVOCABULARY: Prefer interpretive verbs — suggests, indicates, consider, reads as, compared to, "
+    "would behave, is well-suited for. Cite specific numbers from the context (correlation score, epsilon, "
+    "constraint count) inside the narrative — these anchor the interpretation. "
+    "\n\nREMINDERS: Never imply access to raw source records or original identifiers. Talk about the "
+    "*synthetic* package's behavior, the *validation* evidence, the *metadata* intent. When discussing "
+    "tail behavior or rare events, remind the reader that DP noise adds uncertainty at the extremes. "
+    "Stay professional and measured — not marketing-toned. Avoid overclaiming certainty."
+)
+
+
+# Backward-compat export
+SYSTEM_PROMPT = LOCAL_SYSTEM_PROMPT
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CONTEXT BUILDER
+# ═══════════════════════════════════════════════════════════════════════════
 
 def build_chat_context(
     source_label: str, profile: dict[str, Any], hygiene: dict[str, Any],
@@ -38,17 +106,34 @@ def build_chat_context(
         f"Dataset: {source_label}",
         f"Shape: {profile['summary']['rows']} rows, {profile['summary']['columns']} cols, {profile['summary']['identifier_columns']} identifiers",
         f"Hygiene: score={hygiene['quality_score']}, high={hygiene['severity_counts']['High']}, med={hygiene['severity_counts']['Medium']}",
-        f"Controls: fidelity={controls['fidelity_priority']}, rows={controls['synthetic_rows']}",
+        f"Controls: fidelity={controls.get('fidelity_priority', 'n/a')}, rows={controls['synthetic_rows']}",
         "Columns: " + "; ".join(col_summ),
     ]
     if hyg_summ:
         lines.append("Issues: " + "; ".join(hyg_summ))
     if generation_summary:
-        lines.append(f"Generated: {generation_summary['rows_generated']} rows, mode={generation_summary['noise_mode']}")
+        eps = generation_summary.get("privacy_epsilon", "n/a")
+        copula_cols = generation_summary.get("copula_columns") or []
+        constraints = generation_summary.get("detected_constraints") or []
+        lines.append(
+            f"Generation: rows={generation_summary.get('rows_generated', '?')}, "
+            f"privacy_epsilon={eps}, "
+            f"copula_fields={len(copula_cols)}, "
+            f"detected_constraints={len(constraints)}"
+        )
     if validation:
-        lines.append(f"Validation: overall={validation['overall_score']}, fidelity={validation['fidelity_score']}, privacy={validation['privacy_score']}")
+        lines.append(
+            f"Validation: overall={validation['overall_score']}, "
+            f"fidelity={validation['fidelity_score']}, "
+            f"privacy={validation['privacy_score']}, "
+            f"correlation={validation.get('correlation_score', 'n/a')}"
+        )
     return "\n".join(lines)
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# API-BACKED REPLY
+# ═══════════════════════════════════════════════════════════════════════════
 
 def generate_chat_reply(
     api_key: str,
@@ -58,38 +143,36 @@ def generate_chat_reply(
     model: str = DEFAULT_MODEL,
     role: str | None = None,
     max_tokens: int = 900,
+    mode: str = "connected",
 ) -> str:
-    """Route one chat turn through Claude with prompt caching.
+    """Route one chat turn through Claude.
 
-    Falls back to a local deterministic reply if no API key is configured or
-    the external request fails. Uses ephemeral cache_control on both the
-    system prompt (static across sessions) and the context block (stable
-    within a session) so subsequent turns benefit from cache hits.
+    Parameters
+    ----------
+    mode : str
+        "connected" (default) uses CONNECTED_SYSTEM_PROMPT — deeper interpretive narrative.
+        "local" uses LOCAL_SYSTEM_PROMPT — concise verdict-first workflow reasoning.
     """
     key = (api_key or "").strip() or ANTHROPIC_API_KEY
     if not key:
-        return _fallback(user_message)
+        return _fallback(user_message, mode=mode)
     try:
         import anthropic
     except ImportError:
         return ("Anthropic SDK is not installed in this environment. "
-                f"Falling back to local guidance. {_fallback(user_message)}")
+                f"Falling back to Local Agent. {_fallback(user_message, mode='local')}")
 
-    # Keep recent history only; cap to last 10 turns for latency.
+    system_prompt = LOCAL_SYSTEM_PROMPT if mode == "local" else CONNECTED_SYSTEM_PROMPT
+
     msgs: list[dict[str, Any]] = []
     for m in chat_history[-10:]:
         if m.get("content") and m.get("role") in ("user", "assistant"):
             msgs.append({"role": m["role"], "content": m["content"]})
     msgs.append({"role": "user", "content": user_message})
 
-    # Prompt caching: static system prompt + per-session context both cached.
     role_hint = f"\n\nCurrent user role: {role}." if role else ""
     system_blocks = [
-        {
-            "type": "text",
-            "text": SYSTEM_PROMPT,
-            "cache_control": {"type": "ephemeral"},
-        },
+        {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}},
         {
             "type": "text",
             "text": f"Synthetic package context (metadata + aggregates only):\n{context}{role_hint}",
@@ -107,24 +190,25 @@ def generate_chat_reply(
         )
         text_parts = [block.text for block in resp.content if getattr(block, "type", None) == "text"]
         response_text = "\n".join(p.strip() for p in text_parts if p).strip()
-        return _normalize_reply_text(response_text or _fallback(user_message))
+        return _normalize_reply_text(response_text or _fallback(user_message, mode=mode))
     except anthropic.AuthenticationError:
         return "Authentication failed. Check that the API key is valid and has access to the Claude API."
     except anthropic.RateLimitError:
-        return "Rate limited by the external API. Retry in a moment, or continue in internal guidance mode."
+        return "Rate limited by the Connected Agent runtime. Retry in a moment, or stay in Local mode."
     except anthropic.APIConnectionError:
-        return (f"Could not reach the external API right now. {_fallback(user_message)}")
+        return f"Could not reach the Connected Agent runtime right now. {_fallback(user_message, mode='local')}"
     except anthropic.APIStatusError as exc:
-        return (f"External API error ({exc.status_code}). {_fallback(user_message)}")
+        return f"Connected Agent runtime error ({exc.status_code}). {_fallback(user_message, mode='local')}"
     except Exception as exc:
-        return (f"Unexpected error routing to external API ({type(exc).__name__}). {_fallback(user_message)}")
+        return f"Unexpected error reaching the Connected Agent runtime ({type(exc).__name__}). {_fallback(user_message, mode='local')}"
 
 
 def generate_demo_chat_reply(
     user_message: str, profile: dict[str, Any], hygiene: dict[str, Any],
     controls: dict[str, Any], validation: dict[str, Any] | None,
+    mode: str = "local",
 ) -> str:
-    return _fallback(user_message, profile, hygiene, controls, validation)
+    return _fallback(user_message, profile, hygiene, controls, validation, mode=mode)
 
 
 def _normalize_reply_text(text: str) -> str:
@@ -148,88 +232,248 @@ def _normalize_reply_text(text: str) -> str:
     return "\n".join(lines)
 
 
-def _fallback(msg: str, profile=None, hygiene=None, controls=None, validation=None) -> str:
+# ═══════════════════════════════════════════════════════════════════════════
+# DETERMINISTIC FALLBACK — two distinct templates
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _verdict_from_state(hygiene, validation, controls) -> tuple[str, str]:
+    """Returns (label, one-sentence verdict) from current workflow state."""
+    high = (hygiene or {}).get("severity_counts", {}).get("High", 0) if hygiene else 0
+    overall = float((validation or {}).get("overall_score", 0) or 0)
+    privacy = float((validation or {}).get("privacy_score", 0) or 0)
+
+    if high and high > 0:
+        return "Blocker", f"{high} high-severity hygiene finding(s) must be cleared before release."
+    if overall == 0:
+        return "Hold", "No validation on record yet — generate a synthetic preview first."
+    if overall < 60:
+        return "Hold", f"Overall quality {overall:.1f} below sandbox threshold — adjust controls and regenerate."
+    if privacy < 70:
+        return "Warning", f"Privacy score {privacy:.1f} is low — consider tighter ε or stricter field handling."
+    if overall < 75:
+        return "Warning", f"Overall quality {overall:.1f} is modest — review per-field drift before downstream use."
+    return "Ready", f"Overall quality {overall:.1f}, privacy {privacy:.1f} — cleared for internal sandbox use."
+
+
+def _local_reply(takeaway: str, bullets: list[str], next_action: str,
+                 verdict_label: str | None = None) -> str:
+    """Compose a Local Agent reply: verdict (optional) → bullets → next action."""
+    bullet_lines = "\n".join(f"- {item}" for item in bullets[:4])
+    parts = []
+    if verdict_label:
+        parts.append(f"**{verdict_label}** — {takeaway}")
+    else:
+        parts.append(takeaway)
+    parts.append("")
+    parts.append(bullet_lines)
+    parts.append("")
+    parts.append(f"Next action: {next_action}")
+    return "\n".join(parts)
+
+
+def _connected_reply(framing: str, sections: list[tuple[str, str]],
+                     closing: str | None = None) -> str:
+    """Compose a Connected Agent reply: framing → labelled sections → optional closing."""
+    parts = [framing, ""]
+    for label, body in sections[:4]:
+        parts.append(f"**{label} —** {body}")
+        parts.append("")
+    if closing:
+        parts.append(closing)
+    while parts and parts[-1] == "":
+        parts.pop()
+    return "\n".join(parts)
+
+
+def _fallback(msg: str, profile=None, hygiene=None, controls=None, validation=None,
+              mode: str = "local") -> str:
     m = msg.lower().strip()
     fp = (controls or {}).get("fidelity_priority", 50)
-    rows = (profile or {}).get("summary", {}).get("rows", "N/A")
+    rows = (profile or {}).get("summary", {}).get("rows", "the current package")
     overall_score = (validation or {}).get("overall_score", "pending")
+    privacy_score = (validation or {}).get("privacy_score", "pending")
+    correlation = (validation or {}).get("correlation_score", "n/a")
 
-    def structured_reply(takeaway: str, bullets: list[str], next_step: str) -> str:
-        bullet_lines = "\n".join(f"- {item}" for item in bullets[:4])
-        return f"{takeaway}\n\n{bullet_lines}\n\nNext step: {next_step}"
+    verdict_label, verdict_sentence = _verdict_from_state(hygiene, validation, controls)
 
-    if any(k in m for k in ["agent", "agentic"]):
-        return structured_reply(
-            "The agent layer sits on top of the approved synthetic package, not the raw source dataset.",
-            [
-                "Local mode stays fully inside the workspace for bounded analysis.",
-                "Connected mode adds stronger reasoning through the API on synthetic artifacts only.",
-                "Every workflow decision is recorded in the audit trail.",
-            ],
-            "Use Local for first-pass review and Connected when you need deeper analytical framing.",
-        )
-    if any(k in m for k in ["privacy", "fidelity", "slider"]):
-        label = "higher privacy" if fp < 40 else "balanced" if fp < 70 else "higher fidelity"
-        return structured_reply(
-            f"Privacy-vs-fidelity is currently set to {label} ({fp}/100).",
-            [
-                "Lower values add more noise and strengthen privacy protection.",
-                "Higher values preserve source-like patterns more aggressively.",
-                "The right setting depends on whether you prioritize privacy margin or analytical realism.",
-            ],
-            "Validate quality and privacy together before release.",
-        )
-    if any(k in m for k in ["lineage", "metadata", "how"]):
-        return structured_reply(
-            "The package is produced through a governed metadata-driven workflow.",
-            [
-                "Source data is profiled into metadata and hygiene findings.",
-                "Approved metadata drives synthetic generation.",
-                "Validation compares the package against the source profile at an aggregate level.",
-            ],
-            "Review metadata and validation together before downstream use.",
-        )
-    if any(k in m for k in ["hygiene", "issue", "quality"]):
-        if hygiene:
-            return structured_reply(
-                f"{hygiene['severity_counts']['High']} high and {hygiene['severity_counts']['Medium']} medium hygiene issue(s) are currently flagged.",
+    # ── LOCAL AGENT fallback ────────────────────────────────────────────
+    if mode == "local":
+        if any(k in m for k in ["ready", "share", "release", "approve"]):
+            return _local_reply(
+                verdict_sentence,
                 [
-                    "Corrections apply to metadata and controls, not to raw source records.",
-                    f"Overall validation is {overall_score}.",
-                    "Unresolved hygiene findings should be cleared before broader internal use.",
+                    f"Overall {overall_score}, privacy {privacy_score}, correlation {correlation}.",
+                    "Governance: reviewer approval drives the release gate.",
+                    f"{(hygiene or {}).get('severity_counts', {}).get('High', 0)} high / "
+                    f"{(hygiene or {}).get('severity_counts', {}).get('Medium', 0)} medium hygiene finding(s) on record.",
                 ],
-                "Review the highest-severity findings first.",
+                "Confirm downstream scope is sandbox-appropriate before handoff.",
+                verdict_label=verdict_label,
             )
-        return structured_reply(
-            "The hygiene scan has not run yet.",
-            ["Upload data before quality and issue checks can be generated."],
-            "Start with the upload step.",
-        )
-    if any(k in m for k in ["governance", "audit", "phipa"]):
-        return structured_reply(
-            "Governance remains in place across the full workflow.",
+        if any(k in m for k in ["privacy", "fidelity", "slider", "epsilon"]):
+            label = "higher privacy" if fp < 40 else "balanced" if fp < 70 else "higher fidelity"
+            return _local_reply(
+                f"Privacy-vs-fidelity set to {label} ({fp}/100).",
+                [
+                    f"Current privacy score: {privacy_score}.",
+                    "Lower fidelity priority adds noise and strengthens privacy.",
+                    "Higher fidelity priority preserves source-like patterns more aggressively.",
+                ],
+                "Validate the trade-off before regenerating.",
+            )
+        if any(k in m for k in ["hygiene", "issue", "quality", "blocker", "warning"]):
+            if hygiene:
+                high = hygiene["severity_counts"]["High"]
+                med = hygiene["severity_counts"]["Medium"]
+                return _local_reply(
+                    f"{high} high and {med} medium hygiene finding(s) flagged.",
+                    [
+                        f"Overall validation currently {overall_score}.",
+                        "Corrections apply to metadata and controls only — not source rows.",
+                        "Clear high-severity findings before broader internal use.",
+                    ],
+                    "Resolve the highest-severity finding first.",
+                    verdict_label="Blocker" if high else ("Warning" if med else "Ready"),
+                )
+            return _local_reply(
+                "Hygiene scan has not run yet.",
+                ["Upload data and run the scan before any quality checks."],
+                "Start at the upload step.",
+                verdict_label="Hold",
+            )
+        if any(k in m for k in ["governance", "audit", "phipa", "boundary", "privacy law"]):
+            return _local_reply(
+                "Governance is active across the workflow.",
+                [
+                    "Every major action is audit-logged.",
+                    "Reviewer approval gates generation and release.",
+                    "Source rows are never copied into the agent layer.",
+                ],
+                "Use the audit and approval state to justify the release decision.",
+            )
+        if any(k in m for k in ["agent", "local", "connected", "mode"]):
+            return _local_reply(
+                "Local Agent is the default governed mode for workflow reasoning.",
+                [
+                    "Local stays fully inside the workspace — no external call.",
+                    "Connected unlocks only after governance gates pass, on synthetic output only.",
+                    "Escalate to Connected when you need deeper interpretation, not a decision.",
+                ],
+                "Stay in Local for readiness and release reasoning.",
+            )
+        # Generic
+        return _local_reply(
+            f"Workflow agent active on {rows} package.",
             [
-                "Every major action is logged in the audit trail.",
-                "Metadata requires reviewer approval before governed generation and release.",
-                "Source data is not copied into the agent layer.",
+                f"Overall {overall_score}, privacy {privacy_score}.",
+                "Ask about readiness, blockers, hygiene, or next checks.",
             ],
-            "Use the audit and approval state to support release decisions.",
+            "Frame the next question around a concrete decision.",
+            verdict_label=verdict_label,
         )
-    if any(k in m for k in ["use", "analysis", "why"]):
-        return structured_reply(
-            "This synthetic package is best suited for internal modeling sandbox use, not clinical decision making.",
+
+    # ── CONNECTED AGENT fallback ────────────────────────────────────────
+    if any(k in m for k in ["ready", "share", "release", "approve", "use", "suitable"]):
+        return _connected_reply(
+            f"The approved synthetic package reads as well-suited for internal sandbox use, "
+            f"with overall quality {overall_score} and correlation preservation at {correlation}.",
             [
-                "Typical uses include workflow modeling, pipeline testing, and vendor sandboxing.",
-                f"Current package size is {rows} rows with validation at {overall_score}.",
-                "Use Connected mode when you need a stronger analytical narrative or exploration path.",
+                ("Pattern",
+                 f"The package's overall score of {overall_score} combined with a privacy score of "
+                 f"{privacy_score} suggests the generation profile landed in a usable middle zone — "
+                 "close enough to source patterns to support realistic analytics, yet distanced from "
+                 "individual records."),
+                ("Scenario",
+                 "For operational analytics (throughput, triage mix, workflow timing), the package "
+                 "should behave close to the source operational reality. For predictive modelling on "
+                 "rare tail events, the Laplace DP noise adds meaningful uncertainty at the extremes — "
+                 "treat those regions cautiously."),
+                ("Stakeholder view",
+                 "Operations leads can use the package for throughput and mix questions. Clinical "
+                 "analysts should interpret only at the aggregate level, since the synthetic records "
+                 "are not patient-linked. Compliance can rely on the audit trail and the synthetic-only "
+                 "boundary being enforced."),
+                ("Watch point",
+                 f"{(hygiene or {}).get('severity_counts', {}).get('High', 0)} high / "
+                 f"{(hygiene or {}).get('severity_counts', {}).get('Medium', 0)} medium hygiene "
+                 "finding(s) remain on the source-side record. Worth confirming that no hygiene issue "
+                 "on a field you will analyse is unresolved."),
             ],
-            "Match the package to the intended internal use before sharing further.",
+            "Connected Agent frames the reading; the release decision itself sits with the reviewer "
+            "and the Local Agent checklist.",
         )
-    return structured_reply(
-        f"Workflow agent active on a package with {rows} rows.",
+    if any(k in m for k in ["privacy", "fidelity", "epsilon", "dp", "noise"]):
+        label = "higher-privacy" if fp < 40 else "balanced" if fp < 70 else "higher-fidelity"
+        return _connected_reply(
+            f"The package is currently configured toward a {label} posture ({fp}/100 on the fidelity "
+            f"priority), which shapes what the synthetic output can and cannot support downstream.",
+            [
+                ("Pattern",
+                 f"At this setting, the privacy score is {privacy_score} and the overall "
+                 f"quality is {overall_score}. That suggests the trade-off is landing as intended — "
+                 "privacy cushion in place, with enough distributional signal for structural analytics."),
+                ("Scenario",
+                 "If the downstream work is exploratory structure (which fields correlate, what the "
+                 "mix looks like), fidelity at this level is usually adequate. If the work is tail-"
+                 "sensitive modelling (extreme wait times, rare triage levels), the added noise will "
+                 "flatten the tails and should be acknowledged in any conclusions."),
+                ("Compared to",
+                 "A stronger-privacy setting would widen that margin but further compress the tails. "
+                 "A higher-fidelity setting would sharpen structural signals but narrow the privacy "
+                 "buffer — the current configuration is a middle position."),
+            ],
+        )
+    if any(k in m for k in ["hygiene", "issue", "quality", "drift"]):
+        high = (hygiene or {}).get("severity_counts", {}).get("High", 0)
+        med = (hygiene or {}).get("severity_counts", {}).get("Medium", 0)
+        return _connected_reply(
+            f"Hygiene findings on record ({high} high, {med} medium) shape how confidently this "
+            f"synthetic package can be read downstream.",
+            [
+                ("Pattern",
+                 "Hygiene findings describe properties of the source data that propagate into the "
+                 "synthetic output via the metadata pipeline. A field with high-severity findings on "
+                 "the source side typically produces noisier synthetic output in that field."),
+                ("Scenario",
+                 "If downstream analysis touches a flagged field, expect more drift than the headline "
+                 "quality score suggests. If the analysis avoids flagged fields, the relevant quality "
+                 f"is closer to the {overall_score} overall number than to the worst-case per-field figure."),
+                ("Watch point",
+                 "Confirm that the per-field validation on any field you will use looks healthy, "
+                 "independent of the overall headline. The correlation preservation score "
+                 f"({correlation}) is the honest read on how joint relationships held up."),
+            ],
+        )
+    if any(k in m for k in ["stakeholder", "clinician", "ops", "manager", "audit"]):
+        return _connected_reply(
+            "Different stakeholders read the same synthetic package through quite different lenses — "
+            "usefulness, risk, and audit posture all weigh differently.",
+            [
+                ("Stakeholder view",
+                 f"Operations lead: focus on whether the package supports realistic throughput / mix "
+                 f"analysis — overall score {overall_score} suggests it does. Clinical analyst: treat "
+                 "at aggregate level only; records are not patient-linked. Compliance: the audit trail "
+                 "and synthetic-only boundary are the anchors."),
+                ("Pattern",
+                 f"The {correlation} correlation preservation means joint relationships across fields "
+                 "held up meaningfully, which is usually the dimension operations and analyst readers "
+                 "care about most."),
+                ("Watch point",
+                 "Be explicit with every downstream stakeholder that this is synthetic sandbox output — "
+                 "not clinical-decision material."),
+            ],
+        )
+    # Generic Connected fallback
+    return _connected_reply(
+        f"Connected Agent reads this package as a bounded but usable synthetic asset: overall quality "
+        f"{overall_score}, privacy {privacy_score}, correlation {correlation}.",
         [
-            "Ask about package readiness, risks, validation posture, or likely next checks.",
-            "Use Local mode for bounded review and Connected mode for deeper analysis.",
+            ("Pattern",
+             "The combination of quality, privacy, and correlation scores gives a first read on what "
+             "kind of downstream work the package can support."),
+            ("Scenario",
+             "Structural and aggregate-level analysis is usually well-served by packages in this range. "
+             "Tail-sensitive or rare-event modelling should proceed with more caution."),
         ],
-        "Frame the next question around a concrete decision you need to make.",
+        "Ask a more specific question (a use case, a field, a stakeholder) for richer framing.",
     )
